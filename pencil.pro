@@ -67,6 +67,12 @@ SOURCES += src/external/flash/flash.cpp \
            src/interface/timecontrols.cpp \
            src/interface/toolset.cpp \
            src/main.cpp
+
+#Linux by default
+	INCLUDEPATH += . liblinux
+	SOURCES += src/external/linux/linux.cpp
+	LIBS += -Lliblinux -lming -lpng
+
 win32 {
 	INCLUDEPATH += . libwin32
 	SOURCES += src/external/win32/win32.cpp
@@ -81,10 +87,11 @@ macx {
 	LIBS += -Llibmacosx -lming
 	RC_FILE = pencil.icns
 }
-linux-g++ {
-	INCLUDEPATH += . liblinux
-	SOURCES += src/external/linux/linux.cpp
-	LIBS += -Lliblinux -lming -lpng
-}
+#linux-g++ {
+#	INCLUDEPATH += . liblinux
+#	SOURCES += src/external/linux/linux.cpp
+#	LIBS += -Lliblinux -lming -lpng
+#}
+
 RESOURCES += pencil.qrc
 QT += xml opengl
