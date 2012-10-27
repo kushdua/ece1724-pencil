@@ -172,3 +172,8 @@ void LayerBitmap::loadDomElement(QDomElement element, QString filePath) {
 		imageTag = imageTag.nextSibling();
 	}
 }
+
+int LayerBitmap::getNumberOfFrames()
+{
+    return framesBitmap.size();
+}

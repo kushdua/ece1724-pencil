@@ -773,6 +773,35 @@ void Editor::about()
 							 "Distributed under the GPL License."
 							 "</td></tr></table>"
 							 "</div>"));
+    qDebug("about to save image");
+    QImage* image = NULL;
+    for(int i=0; i<object->getLayerCount(); i++)
+    {
+        qDebug("Layer %i type is %i", i, object->getLayer(i)->type);
+        if(object->getLayer(i)->type == Layer::BITMAP)
+        {
+            LayerBitmap* lb = (LayerBitmap*)object->getLayer(i);
+            if(lb)
+            {
+                qDebug("Found %i frames in the LayerBitmap",lb->getNumberOfFrames());
+                for(int j=0; j<lb->getNumberOfFrames(); j++)
+                {
+                    BitmapImage* bim = lb->getBitmapImageAtFrame(j);
+                    image = (bim) ? bim->image : NULL;
+                    //qDebug("Image in frame %i = %h",j,image);
+                    qDebug() << "Image in frame " << j << " = " << hex << image << endl;
+                    if(image!=NULL)
+                    {
+                        printf("canvas image has size %ix%i\n",image->height(), image->width());
+                        char* name = "";
+                        sprintf(name,"test_save_%i.bmp",j);
+                        image->save(name);
+                        qDebug("saved image");
+                    }
+                }
+            }
+        }
+    }
 }
 
 void Editor::helpBox() {
