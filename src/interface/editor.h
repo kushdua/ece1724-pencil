@@ -181,6 +181,7 @@ public slots:
 	
 	void changeAutosave(int);
 	void changeAutosaveNumber(int);
+	void changeSnapshotDir(QString);
 	
 	void modification();
 	void modification(int);
@@ -235,6 +236,9 @@ private:
 	QMainWindow *mainWindow;
 	
 	QString savedName;
+	int snapshotCount;
+	QString snapshotDir;
+
 	bool altpress;
 	bool modified;
 	int numberOfModifications;

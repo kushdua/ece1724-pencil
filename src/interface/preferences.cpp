@@ -67,7 +67,7 @@ Preferences::Preferences()
 		 
 		 QListWidgetItem *filesButton = new QListWidgetItem(contentsWidget);
      filesButton->setIcon(QIcon(":icons/prefs-files.png"));
-     filesButton->setText(tr("Files"));
+     filesButton->setText(tr("Snapshots"));
      filesButton->setTextAlignment(Qt::AlignHCenter);
      filesButton->setFlags(Qt::ItemIsSelectable | Qt::ItemIsEnabled);
 		 
@@ -372,11 +372,15 @@ FilesPage::FilesPage(QWidget *parent) : QWidget(parent) {
 	
 	QVBoxLayout *lay = new QVBoxLayout();
 	
-	QGroupBox* autosaveBox = new QGroupBox(tr("Autosave documents"));
-	QCheckBox *autosaveCheckBox = new QCheckBox(tr("Enable autosave"));
-	QLabel *autosaveNumberLabel = new QLabel(tr("Number of modifications before autosaving:"));
+	QGroupBox* autosaveBox = new QGroupBox(tr("Auto-Snapshot Documents"));
+	QCheckBox *autosaveCheckBox = new QCheckBox(tr("Enable auto-snapshot"));
+	QLabel *autosaveNumberLabel = new QLabel(tr("Number of modifications before auto-snapshot:"));
 	QSpinBox *autosaveNumberBox = new QSpinBox();
 	
+	QLabel *snapshotDirectoryLabel = new QLabel(tr("Specify Snapshot Directory:"));
+	QLineEdit *snapshotDirectoryBox = new QLineEdit(this);
+	snapshotDirectoryBox->setFixedWidth(350);
+
 	autosaveNumberBox->setMinimum(5);
 	autosaveNumberBox->setMaximum(200);
 	autosaveNumberBox->setFixedWidth(50);
@@ -387,12 +391,18 @@ FilesPage::FilesPage(QWidget *parent) : QWidget(parent) {
 	autosaveNumberBox->setValue(settings.value("autosaveNumber").toInt()); 
 	if (settings.value("autosaveNumber").toInt()==0) autosaveNumberBox->setValue(20);
 	
+	snapshotDirectoryBox->setText(settings.value("snapshotDir").toString());
+
 	connect(autosaveNumberBox, SIGNAL(valueChanged(int)), parent, SIGNAL(autosaveNumberChange(int)));
 	connect(autosaveCheckBox, SIGNAL(stateChanged(int)), parent, SIGNAL(autosaveChange(int)));
+	connect(snapshotDirectoryBox, SIGNAL(textChanged(QString)), parent, SIGNAL(snapshotDirChange(QString)));
 	
 	lay->addWidget(autosaveCheckBox);
 	lay->addWidget(autosaveNumberLabel);
 	lay->addWidget(autosaveNumberBox);
+	lay->addWidget(snapshotDirectoryLabel);
+	lay->addWidget(snapshotDirectoryBox);
+
 	autosaveBox->setLayout(lay);
 	
 	QVBoxLayout *lay2 = new QVBoxLayout();

@@ -1569,6 +1569,8 @@ void ScribbleArea::setGaussianGradient(QGradient &gradient, QColor colour, qreal
 }
 
 void ScribbleArea::drawBrush(QPointF thePoint, qreal brushWidth, qreal offset, QColor fillColour, qreal opacity) {
+	qDebug() << "Drawing with a brush\n";
+
 	QRadialGradient radialGrad(thePoint, 0.5*brushWidth);
 	setGaussianGradient(radialGrad, fillColour, opacity, offset);
 	
@@ -1599,7 +1601,9 @@ void ScribbleArea::drawBrush(QPointF thePoint, qreal brushWidth, qreal offset, Q
 }
 
 void ScribbleArea::drawLineTo(const QPointF &endPixel, const QPointF &endPoint)
-{	
+{
+	qDebug() << "Drawing a line\n";
+
 	Layer* layer = editor->getCurrentLayer();
 	if(layer == NULL) return;
 	

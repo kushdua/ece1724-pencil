@@ -42,6 +42,7 @@ class Preferences : public QDialog {
 	
 		void autosaveChange(int);
 		void autosaveNumberChange(int);
+		void snapshotDirChange(QString);
 				
 		void lengthSizeChange(QString);
 		void fontSizeChange(int);

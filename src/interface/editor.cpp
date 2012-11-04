@@ -37,6 +37,9 @@ Editor::Editor(QMainWindow* parent)
 	
 	object = NULL; // the editor is initialized with no object
 	savedName = "";
+	snapshotCount = 0;
+	snapshotDir = "/autofs/fs1.ece/fs1.eecg.steffan/r/r1/rashidm1/Desktop/PencilSnaps/";
+	settings.setValue("snapshotDir", snapshotDir);
 	altpress=false;
 	modified=false;
 	numberOfModifications = 0;
@@ -165,6 +168,7 @@ Editor::Editor(QMainWindow* parent)
 	
 	connect(preferences, SIGNAL(autosaveChange(int)), this, SLOT(changeAutosave(int)));
 	connect(preferences, SIGNAL(autosaveNumberChange(int)), this, SLOT(changeAutosaveNumber(int)));
+	connect(preferences, SIGNAL(snapshotDirChange(QString)), this, SLOT(changeSnapshotDir(QString)));
 	
 	connect(preferences, SIGNAL(lengthSizeChange(QString)), timeLine, SIGNAL(lengthChange(QString)));
 	connect(preferences, SIGNAL(fontSizeChange(int)), timeLine, SIGNAL(fontSizeChange(int)));
@@ -260,6 +264,8 @@ void Editor::openRecent() {
 		QMessageBox::warning(this, "Warning", "Pencil cannot read this file. If you want to import images, use the command import.");
 		newObject();
 	}
+	snapshotCount = 0;
+	//TODO: Remove all snapshots/logs
 }
 
 bool Editor::saveDocument()
@@ -490,9 +496,17 @@ void Editor::changeAutosave(int x) {
 }
 
 void Editor::changeAutosaveNumber(int number) {
+	qDebug() << "auto save num: " << number << "\n";
 	autosaveNumber = number;
 	QSettings settings("Pencil","Pencil");
 	settings.setValue("autosaveNumber", number);
+}
+
+void Editor::changeSnapshotDir(QString newDir) {
+	snapshotDir = newDir;
+	qDebug() << "New Dir: " << newDir << "\n";
+	QSettings settings("Pencil","Pencil");
+	settings.setValue("snapshotDir", newDir);
 }
 
 void Editor::modification() {
@@ -509,8 +523,9 @@ void Editor::modification(int layerNumber) {
 	numberOfModifications++;
 	if(autosave && numberOfModifications > autosaveNumber) {
 		numberOfModifications = 0;
-		//saveForce();
-		if (savedName!="") saveObject(savedName);
+		//saveObject(savedName + "/temp/snapshot" + snapshotCount);
+		saveObject(snapshotDir + "snap" + QString::number(snapshotCount));
+		snapshotCount++;
 	}
 }
 
@@ -901,6 +916,8 @@ void Editor::newObject() {
 	setObject(newObject);
 	updateObject();
 	savedName = "";
+	snapshotCount = 0;
+	//TODO: Remove all snapshots/logs
 	mainWindow->setWindowTitle(tr("Pencil v0.4.4b"));
 }
 
@@ -954,6 +971,9 @@ bool Editor::openObject(QString filePath) {
 	progress.show();
 	
 	savedName = filePath;
+	snapshotCount = 0;
+	//TODO: Remove all snapshots/logs
+
 	QSettings settings("Pencil","Pencil");
 	settings.setValue("lastFilePath", QVariant(savedName) );
 	mainWindow->setWindowTitle(savedName);
