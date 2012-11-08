@@ -788,7 +788,7 @@ void Editor::about()
 							 "Distributed under the GPL License."
 							 "</td></tr></table>"
 							 "</div>"));
-    qDebug("about to save image");
+/*    qDebug("about to save image");
     QImage* image = NULL;
     for(int i=0; i<object->getLayerCount(); i++)
     {
@@ -817,6 +817,7 @@ void Editor::about()
             }
         }
     }
+*/
 }
 
 void Editor::helpBox() {
