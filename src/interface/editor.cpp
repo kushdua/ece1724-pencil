@@ -38,7 +38,7 @@ Editor::Editor(QMainWindow* parent)
 	object = NULL; // the editor is initialized with no object
 	savedName = "";
 	snapshotCount = 0;
-	snapshotDir = "/autofs/fs1.ece/fs1.eecg.steffan/r/r1/rashidm1/Desktop/PencilSnaps/";
+	snapshotDir = QDir::currentPath() + "/snapshots/";
 	settings.setValue("snapshotDir", snapshotDir);
 	altpress=false;
 	modified=false;
