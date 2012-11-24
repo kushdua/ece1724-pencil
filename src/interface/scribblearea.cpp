@@ -23,6 +23,7 @@ GNU General Public License for more details.
 #include "layercamera.h"
 
 #include "bitmapimage.h"
+#include "logger.h"
 
 void VectorSelection::clear() {
 	vertex.clear();

@@ -10,9 +10,9 @@
 	class Logger
 	{
 		public:
-			getInstance();
+			Logger *getInstance();
 
 		private:
-			static Logger instance;
+			static Logger *instance;
 	};
 #endif

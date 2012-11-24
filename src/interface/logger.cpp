@@ -1,15 +1,16 @@
 /**
  * Logging functionality
  */
- 
-#include <logger.h>
 
-Logger Logger::instance = NULL;
+#include <cstdlib>
+#include "logger.h"
 
-void Logger::getInstance()
+Logger *Logger::instance = NULL;
+
+Logger *Logger::getInstance()
 {
 	if (instance == NULL)
-		instance = new Logger();
+		instance = new Logger;
 
       return instance;
 }
