@@ -1,15 +1,15 @@
 /**
  * Logging functionality
- * /
+ */
  
 #include <logger.h>
 
-class Logger
-{
+Logger Logger::instance = NULL;
 
-  void getInstance()
-  {
-      if(instance==NULL) instance = new Logger();
+void Logger::getInstance()
+{
+	if (instance == NULL)
+		instance = new Logger();
+
       return instance;
-  }
 }
