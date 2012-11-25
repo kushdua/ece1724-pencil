@@ -1605,69 +1605,87 @@ void ScribbleArea::drawLineTo(const QPointF &endPixel, const QPointF &endPoint)
 {
 	qDebug() << "Drawing a line";
 
+	bool createdNew = false;
+	QDomDocument doc;
+
 	Layer* layer = editor->getCurrentLayer();
 	if (layer == NULL) return;
 
-	QString snapshotDir = editor->getSnapshotDir();
-	QFile* file = new QFile(snapshotDir + ((snapshotDir.endsWith("/")) ? "":"/") + "snapshotOperations"+QString::number(editor->getSnapshotCount(), 10)+".log");
+	QString snapshotDir = editor->getSnapshotDir(); 
+	QFile* file = new QFile(QString(snapshotDir + ((snapshotDir.endsWith("/")) ? "":"/") + "snapshotOperations%1.log").arg(editor->getSnapshotCount()));
+
+	if (!file->exists())
+	{
+		doc = QDomDocument("PencilOperationsSaveLog");
+		createdNew = true;
+	}
 
 	if (!file->open(QFile::ReadWrite | QFile::Text)) {
-		qDebug() << "Warning: Cannot write operations log file " << editor->getSnapshotCount();
+		//QMessageBox::warning(this, "Warning", "Cannot write file");
+		qDebug() << "Warning: Cannot write operations log file";
+		return;
 	}
 
 	QTextStream out(file);
 
-	// Open main log file
-  	QDomDocument doc;
-  	if (!doc.setContent(file))
-  	{
-  		if (!file->exists())
-  		{
-  			QDomDocument doc2("PencilOperationSaveLog");
-  			doc = doc2;
-  		}
-  		else {
-  			//TODO: Fix
-  			qDebug() << "Warning: ScribbleArea: This is not a XML file.";
-  		}
-  	}
+	if (!createdNew && !doc.setContent(file))
+	{
+		qDebug() << "operations log file is not XML file";
+		return; // this is not a XML file
+	}
+	QDomDocumentType type = doc.doctype();
+	if (type.name() != "PencilOperationsSaveLog") {
+		qDebug() << "Warning: This is not a Pencil Snapshot save log document";
+		return;
+	}
 
-  	QDomDocumentType type = doc.doctype();
-  	if (type.name() != "PencilOperationSaveLog") {
-  		//TODO: Fix
-  		qDebug("Error: Operation log is in wrong format - not XML PencilOperationSaveLog type");
-  	}
+	// Add new snapshot and operations log info to main log file
+	QDomNode root = doc.documentElement();
+	if(root.isNull())
+	{
+		root = doc.createElement("operations");
+		doc.appendChild(root);
+	}
 
-  	// Add new snapshot and operations log info to main log file
-  	QDomNode root = doc.documentElement();
+	QDomElement newOperation = doc.createElement("operation");
 
-	if (layer->type == Layer::BITMAP) {
+	if(layer->type == Layer::BITMAP) {
 		//int index = ((LayerImage*)layer)->getLastIndexAtFrame(editor->currentFrame);
 		//if(index == -1) return;
 		//BitmapImage* bitmapImage = ((LayerBitmap*)layer)->getLastBitmapImageAtFrame(editor->currentFrame, 0);
 		//if(bitmapImage == NULL) { qDebug() << "NULL image pointer!" << editor->currentLayer << editor->currentFrame;  return; }
-		
+
+		//newOperation.setAttribute("layerType", layer->type);
+
+		//newOperation.setAttribute("toolMode", toolMode);
 		if (toolMode == ScribbleArea::ERASER) {
+			//newOperation.setAttribute("currentWidth", currentWidth);
+			//newOperation.setAttribute("lastPoint", lastPoint);
+			//newOperation.setAttribute("endPoint", endPoint);
+			//newOperation.setAttribute("antialiasing", antialiasing);
+
 			QPen pen2 = QPen ( QBrush(QColor(255,255,255,255)), currentWidth, Qt::SolidLine, Qt::RoundCap, Qt::RoundJoin );
 			bufferImg->drawLine(lastPoint, endPoint, pen2, QPainter::CompositionMode_SourceOver, antialiasing);
 			int rad = qRound(currentWidth / 2) + 2;
 			update(myTempView.mapRect(QRect(lastPoint.toPoint(), endPoint.toPoint()).normalized().adjusted(-rad, -rad, +rad, +rad)));
-
-                        QDomElement newDraw;
-                        newDraw.setTagName("draw");
-                        //newDraw.setAttribute("snapshotFile", filePath);
-                        //newDraw.setAttribute("snapshotLogFile", snapshotDir + ((snapshotDir.endsWith("/")) ? "" : "/") + "snapshotOperationsLog" + snapshotCount + ".log");
-                        root.appendChild(newDraw);
-
-
-                }
+		}
 		if(toolMode == ScribbleArea::PENCIL) {
+			//newOperation.setAttribute("currentColour", currentColour);
+			//newOperation.setAttribute("currentWidth", currentWidth);
+			//newOperation.setAttribute("lastPoint", lastPoint);
+			//newOperation.setAttribute("endPoint", endPoint);
+			//newOperation.setAttribute("antialiasing", antialiasing);
 			QPen pen2 = QPen ( QBrush(currentColour), currentWidth, Qt::SolidLine, Qt::RoundCap, Qt::RoundJoin );
 			bufferImg->drawLine(lastPoint, endPoint, pen2, QPainter::CompositionMode_SourceOver, antialiasing);
 			int rad = qRound(currentWidth / 2) + 3;
 			update(myTempView.mapRect(QRect(lastPoint.toPoint(), endPoint.toPoint()).normalized().adjusted(-rad, -rad, +rad, +rad)));
 		}
 		if(toolMode == ScribbleArea::PEN) {
+			//newOperation.setAttribute("currentColour", pen.colour);
+			//newOperation.setAttribute("currentWidth", currentWidth);
+			//newOperation.setAttribute("lastPoint", lastPoint);
+			//newOperation.setAttribute("endPoint", endPoint);
+			//newOperation.setAttribute("antialiasing", antialiasing);
 			QPen pen2 = QPen ( QBrush(pen.colour), currentWidth, Qt::SolidLine, Qt::RoundCap, Qt::RoundJoin );
 			bufferImg->drawLine(lastPoint, endPoint, pen2, QPainter::CompositionMode_SourceOver, antialiasing);
 			int rad = qRound(currentWidth / 2) + 3;
@@ -1677,22 +1695,37 @@ void ScribbleArea::drawLineTo(const QPointF &endPixel, const QPointF &endPoint)
 			qreal opacity = 1.0;
 			qreal brushWidth = brush.width +  0.5*brush.feather;
 			qreal offset = qMax(0.0,brush.width-0.5*brush.feather)/brushWidth;
+
+			//newOperation.setAttribute("offset", offset);
+
 			if(tabletInUse) opacity = tabletPressure;
 			if(usePressure) brushWidth = brushWidth*tabletPressure;
-			
+
+			//newOperation.setAttribute("brushWidth", brushWidth);
+			//newOperation.setAttribute("opacity", opacity);
+			//newOperation.setAttribute("lastBrushPoint", lastBrushPoint);
+			//newOperation.setAttribute("endPoint", endPoint);
+
 			qreal distance = 4*QLineF(endPoint, lastBrushPoint).length();
 			qreal brushStep = 0.5*brush.width + 0.5*brush.feather;
 			if(usePressure) brushStep = brushStep*tabletPressure;
 			brushStep = qMax(1.0, brushStep);
 			int steps = qRound( distance)/brushStep ;
-			
+
+			//newOperation.setAttribute("steps", steps);
+			//newOperation.setAttribute("brushStep", brushStep);
+			//newOperation.setAttribute("brushColour", brush.colour);
+
 			for(int i=0; i<steps; i++) {
 				QPointF thePoint = lastBrushPoint + (i+1)*(brushStep)*(endPoint -lastBrushPoint)/distance;
 				drawBrush( thePoint, brushWidth, offset, brush.colour, opacity);
 				if(i==steps-1) lastBrushPoint = thePoint;
 			}
-			
+
 			int rad = qRound(brushWidth / 2) + 3;
+
+			//newOperation.setAttribute("lastPoint", lastPoint);
+
 			update(myTempView.mapRect(QRect(lastPoint.toPoint(), endPoint.toPoint()).normalized().adjusted(-rad, -rad, +rad, +rad)));
 		}
 	}
@@ -1718,11 +1751,14 @@ void ScribbleArea::drawLineTo(const QPointF &endPixel, const QPointF &endPoint)
 			update(QRect(lastPixel.toPoint(), endPixel.toPoint()).normalized().adjusted(-rad, -rad, +rad, +rad));
 		}
 	}
-	
+
 	//emit modification();
-	
+
+	root.appendChild(newOperation);
 	// Save changes to operations log
+	file->resize(0);
 	doc.save(out, 2);
+	file->close();
 
 	lastPixel = endPixel;
 	lastPoint = endPoint;

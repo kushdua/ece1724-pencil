@@ -953,45 +953,56 @@ bool Editor::saveObject(QString filePath, bool snapshotSave)
 
 	delete progress;
 
-	if (snapshotSave)
-	{
-		//append this snapshot and associated operations in main log file
+	if (snapshotSave) {
+		bool createdNew = false;
+		QDomDocument doc;
+		//append this snapshot and associated operations log in main log file
 		QFile* file = new QFile(mainLogFilePath);
-		if (!file->open(QFile::ReadWrite | QFile::Text))
-		{
-			qDebug("Warning: Cannot write main log file");
+
+		if (!file->exists()) {
+			doc = QDomDocument("PencilSnapshotSaveLog");
+			createdNew = true;
+		}
+
+		if (!file->open(QFile::ReadWrite | QFile::Text)) {
+			//QMessageBox::warning(this, "Warning", "Cannot write file");
+			qDebug("ERROR: Cannot write main log file");
 			return false;
-        }
+		}
 
 		QTextStream out(file);
 
-		//Open main log file
-		QDomDocument doc;
-		if (!doc.setContent(file))
-		{
-			if (!file->exists())
-			{
-				QDomDocument doc2("PencilSnapshotSaveLog");
-				doc = doc2;
-			}
-			else {
-				return false; // this is not a XML file
-			}
+		// Open main log file
+		if (!createdNew && !doc.setContent(file)) {
+			qDebug("ERROR: main log file is not XML file");
+			return false; // this is not a XML file
 		}
 
 		QDomDocumentType type = doc.doctype();
-		if (type.name() != "PencilSnapshotSaveLog") return false; // this is not a Pencil Snapshot save log document
+		if (type.name() != "PencilSnapshotSaveLog") {
+			qDebug("ERROR: this is not a Pencil Snapshot save log document");
+			return false; // this is not a XML file
+		}
 
 		// Add new snapshot and operations log info to main log file
 		QDomNode root = doc.documentElement();
-		QDomElement newSnapshot;
-		newSnapshot.setTagName("snapshot");
+		if (root.isNull()) {
+			root = doc.createElement("snapshots");
+			doc.appendChild(root);
+		}
+
+		QDomElement newSnapshot = doc.createElement("snapshot");
 		newSnapshot.setAttribute("snapshotFile", filePath);
-		newSnapshot.setAttribute("snapshotLogFile", snapshotDir + ((snapshotDir.endsWith("/")) ? "" : "/") + "snapshotOperations" + snapshotCount + ".log");
+		newSnapshot.setAttribute("snapshotLogFile",
+				QString(
+						snapshotDir + ((snapshotDir.endsWith("/")) ? "" : "/")
+								+ "snapshotOperations%1.log").arg(snapshotCount));
 		root.appendChild(newSnapshot);
 
 		// Save changes
+		file->resize(0);
 		doc.save(out, IndentSize);
+		file->close();
 	}
 
 	return true;
