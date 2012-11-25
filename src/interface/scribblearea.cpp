@@ -1603,12 +1603,45 @@ void ScribbleArea::drawBrush(QPointF thePoint, qreal brushWidth, qreal offset, Q
 
 void ScribbleArea::drawLineTo(const QPointF &endPixel, const QPointF &endPoint)
 {
-	//qDebug() << "Drawing a line";
+	qDebug() << "Drawing a line";
 
 	Layer* layer = editor->getCurrentLayer();
-	if(layer == NULL) return;
-	
-	if(layer->type == Layer::BITMAP) {
+	if (layer == NULL) return;
+
+	QString snapshotDir = editor->getSnapshotDir();
+	QFile* file = new QFile(snapshotDir + ((snapshotDir.endsWith("/")) ? "":"/") + "snapshotOperations"+QString::number(editor->getSnapshotCount(), 10)+".log");
+
+	if (!file->open(QFile::ReadWrite | QFile::Text)) {
+		qDebug() << "Warning: Cannot write operations log file " << editor->getSnapshotCount();
+	}
+
+	QTextStream out(file);
+
+	// Open main log file
+  	QDomDocument doc;
+  	if (!doc.setContent(file))
+  	{
+  		if (!file->exists())
+  		{
+  			QDomDocument doc2("PencilOperationSaveLog");
+  			doc = doc2;
+  		}
+  		else {
+  			//TODO: Fix
+  			qDebug() << "Warning: ScribbleArea: This is not a XML file.";
+  		}
+  	}
+
+  	QDomDocumentType type = doc.doctype();
+  	if (type.name() != "PencilOperationSaveLog") {
+  		//TODO: Fix
+  		qDebug("Error: Operation log is in wrong format - not XML PencilOperationSaveLog type");
+  	}
+
+  	// Add new snapshot and operations log info to main log file
+  	QDomNode root = doc.documentElement();
+
+	if (layer->type == Layer::BITMAP) {
 		//int index = ((LayerImage*)layer)->getLastIndexAtFrame(editor->currentFrame);
 		//if(index == -1) return;
 		//BitmapImage* bitmapImage = ((LayerBitmap*)layer)->getLastBitmapImageAtFrame(editor->currentFrame, 0);
@@ -1619,7 +1652,15 @@ void ScribbleArea::drawLineTo(const QPointF &endPixel, const QPointF &endPoint)
 			bufferImg->drawLine(lastPoint, endPoint, pen2, QPainter::CompositionMode_SourceOver, antialiasing);
 			int rad = qRound(currentWidth / 2) + 2;
 			update(myTempView.mapRect(QRect(lastPoint.toPoint(), endPoint.toPoint()).normalized().adjusted(-rad, -rad, +rad, +rad)));
-		}
+
+                        QDomElement newDraw;
+                        newDraw.setTagName("draw");
+                        //newDraw.setAttribute("snapshotFile", filePath);
+                        //newDraw.setAttribute("snapshotLogFile", snapshotDir + ((snapshotDir.endsWith("/")) ? "" : "/") + "snapshotOperationsLog" + snapshotCount + ".log");
+                        root.appendChild(newDraw);
+
+
+                }
 		if(toolMode == ScribbleArea::PENCIL) {
 			QPen pen2 = QPen ( QBrush(currentColour), currentWidth, Qt::SolidLine, Qt::RoundCap, Qt::RoundJoin );
 			bufferImg->drawLine(lastPoint, endPoint, pen2, QPainter::CompositionMode_SourceOver, antialiasing);
@@ -1680,6 +1721,9 @@ void ScribbleArea::drawLineTo(const QPointF &endPixel, const QPointF &endPoint)
 	
 	//emit modification();
 	
+	// Save changes to operations log
+	doc.save(out, 2);
+
 	lastPixel = endPixel;
 	lastPoint = endPoint;
 }
