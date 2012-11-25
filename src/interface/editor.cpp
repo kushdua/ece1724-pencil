@@ -950,50 +950,50 @@ bool Editor::saveObject(QString filePath, bool snapshotSave)
 	
 	object->modified = false;
 	timeLine->updateContent();
-/*
-        if(snapshotSave)
-        {
-          //append this snapshot and associated operations log in main log file
-          QFile* file = new QFile(mainLogFilePath);
-	  if (!file->open(QFile::ReadWrite | QFile::Text)) {
-		//QMessageBox::warning(this, "Warning", "Cannot write file");
-		qDebug("Warning: Cannot write main log file");
-		return false;
-          }
-          
-          QTextStream out(file);
 
-          // Open main log file
-  	  QDomDocument doc;
-          if (!doc.setContent(file))
-           {
-              if(!file->exists())
-              {
-               QDomDocument doc2("PencilSnapshotSaveLog");
-               doc = doc2;
-              }
-              else
-              {
-                return false; // this is not a XML file
-              }
-           }
-           QDomDocumentType type = doc.doctype();
-           if(type.name() != "PencilSnapshotSaveLog") return false; // this is not a Pencil Snapshot save log document
-
-           // Add new snapshot and operations log info to main log file
-           QDomNode root = doc.documentElement();
-           QDomElement newSnapshot;
-           newSnapshot.setTagName("snapshot");
-           newSnapshot.setAttribute("snapshotFile", filePath);
-           newSnapshot.setAttribute("snapshotLogFile", snapshotDir + ((snapshotDir.endsWith("/")) ? "" : "/") + "snapshotOperations" + snapshotCount + ".log");
-           //e.appendChild(elem)
-           root.appendChild(newSnapshot);
-
-           // Save changes
-           doc.save(out, IndentSize);
-        }
-*/
 	delete progress;
+
+	if (snapshotSave)
+	{
+		//append this snapshot and associated operations in main log file
+		QFile* file = new QFile(mainLogFilePath);
+		if (!file->open(QFile::ReadWrite | QFile::Text))
+		{
+			qDebug("Warning: Cannot write main log file");
+			return false;
+        }
+
+		QTextStream out(file);
+
+		//Open main log file
+		QDomDocument doc;
+		if (!doc.setContent(file))
+		{
+			if (!file->exists())
+			{
+				QDomDocument doc2("PencilSnapshotSaveLog");
+				doc = doc2;
+			}
+			else {
+				return false; // this is not a XML file
+			}
+		}
+
+		QDomDocumentType type = doc.doctype();
+		if (type.name() != "PencilSnapshotSaveLog") return false; // this is not a Pencil Snapshot save log document
+
+		// Add new snapshot and operations log info to main log file
+		QDomNode root = doc.documentElement();
+		QDomElement newSnapshot;
+		newSnapshot.setTagName("snapshot");
+		newSnapshot.setAttribute("snapshotFile", filePath);
+		newSnapshot.setAttribute("snapshotLogFile", snapshotDir + ((snapshotDir.endsWith("/")) ? "" : "/") + "snapshotOperations" + snapshotCount + ".log");
+		root.appendChild(newSnapshot);
+
+		// Save changes
+		doc.save(out, IndentSize);
+	}
+
 	return true;
 }
 
