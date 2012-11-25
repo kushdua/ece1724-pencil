@@ -1603,7 +1603,7 @@ void ScribbleArea::drawBrush(QPointF thePoint, qreal brushWidth, qreal offset, Q
 
 void ScribbleArea::drawLineTo(const QPointF &endPixel, const QPointF &endPoint)
 {
-	qDebug() << "Drawing a line\n";
+	//qDebug() << "Drawing a line";
 
 	Layer* layer = editor->getCurrentLayer();
 	if(layer == NULL) return;

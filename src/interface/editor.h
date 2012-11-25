@@ -94,6 +94,8 @@ public:
 	ToolSet* getToolSet() { return toolSet; }
 	Layer* getCurrentLayer(int incr) { if(object != NULL) { return object->getLayer(currentLayer+incr); } else { return NULL; } }
 	Layer* getCurrentLayer() { return getCurrentLayer(0); }
+	QString getSnapshotDir() { return snapshotDir; }
+	int getSnapshotCount() { return snapshotCount; }
 	bool isModified() { return modified; }
 	int allLayers() { return scribbleArea->allLayers(); }
 	static QMatrix map(QRectF, QRectF);
@@ -226,8 +228,10 @@ private slots:
 	
 private:
 	bool openObject(QString);
-	bool saveObject(QString);
+	bool saveObject(QString, bool snapshotSave = false);
 	
+	void removeSnapshots();
+
 	ScribbleArea *scribbleArea;
 	TimeLine *timeLine;
 	ToolSet *toolSet;
@@ -238,6 +242,7 @@ private:
 	QString savedName;
 	int snapshotCount;
 	QString snapshotDir;
+	QString mainLogFilePath;
 
 	bool altpress;
 	bool modified;
