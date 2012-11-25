@@ -232,8 +232,13 @@ void Editor::showCounter(int n) {
 
 void Editor::removeSnapshots() {
 	snapshotCount = 0;
+	QString rmSnapshotCommand;
 
-	QString rmSnapshotCommand = rmSnapshotCommand = "rm -rf " + snapshotDir + "*";
+	if (snapshotDir.endsWith("/"))
+		rmSnapshotCommand = "rm -rf " + snapshotDir + "*";
+	else
+		rmSnapshotCommand = "rm -rf " + snapshotDir + "/*";
+
 	qDebug() << "REMOVE CMD: " << rmSnapshotCommand;
 	system(rmSnapshotCommand.toUtf8().constData());
 }
@@ -246,6 +251,9 @@ void Editor::newDocument() {
 		//QSize documentSize = QSize(newDocumentDialog_hBox->value(), newDocumentDialog_vBox->value());
 		//newObject(documentSize);
 		newObject(); // default size
+
+		//Remove all snapshots/logs
+		removeSnapshots();
 	}
 }
 
@@ -262,6 +270,9 @@ void Editor::openDocument()
 				newObject();
 			}
 		}
+
+		//Remove all snapshots/logs
+		removeSnapshots();
 	}
 }
 
@@ -274,6 +285,9 @@ void Editor::openRecent() {
 		QMessageBox::warning(this, "Warning", "Pencil cannot read this file. If you want to import images, use the command import.");
 		newObject();
 	}
+
+	//Remove all snapshots/logs
+	removeSnapshots();
 }
 
 bool Editor::saveDocument()
@@ -293,7 +307,7 @@ bool Editor::saveDocument()
 		settings.setValue("lastFilePath", QVariant(fileName));
 
 		//Remove all snapshots/logs
-		//removeSnapshots();
+		removeSnapshots();
 
 		return saveObject(fileName);
 	}
@@ -992,9 +1006,6 @@ void Editor::newObject() {
 	updateObject();
 	savedName = "";
 	mainWindow->setWindowTitle(tr("Pencil v0.4.4b"));
-
-	//Remove all snapshots/logs
-	//removeSnapshots();
 }
 
 void Editor::setObject(Object *object) {
@@ -1047,9 +1058,6 @@ bool Editor::openObject(QString filePath) {
 	progress.show();
 	
 	savedName = filePath;
-
-	//Remove all snapshots/logs
-	removeSnapshots();
 
 	QSettings settings("Pencil","Pencil");
 	settings.setValue("lastFilePath", QVariant(savedName) );
