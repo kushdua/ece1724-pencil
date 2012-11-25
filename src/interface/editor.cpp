@@ -34,13 +34,17 @@ Editor::Editor(QMainWindow* parent)
 	mainWindow = parent;
 	
 	QSettings settings("Pencil","Pencil");
-	
+
 	object = NULL; // the editor is initialized with no object
 	savedName = "";
-	snapshotCount = 0;
+
 	snapshotDir = QDir::currentPath() + "/snapshots/";
 	settings.setValue("snapshotDir", snapshotDir);
 	mainLogFilePath = snapshotDir + "snapshots.log";
+
+	//TODO: Remove this when introducing bugs
+	removeSnapshots();
+
 	altpress=false;
 	modified=false;
 	numberOfModifications = 0;
