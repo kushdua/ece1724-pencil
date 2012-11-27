@@ -676,8 +676,8 @@ qDebug() << "mousePressEvent left button with toolMode " << toolMode << "\n";
 			mousePath.append(lastPoint);
 		}
 		// ----------------------------------------------------------------------
-            bool createdNew = false;
-            QDomDocument doc;
+        bool createdNew = false;
+        QDomDocument doc;
 	    QString snapshotDir = editor->getSnapshotDir(); 
 	    QFile* file = new QFile(QString(snapshotDir + ((snapshotDir.endsWith("/")) ? "":"/") + "snapshotOperations%1.log").arg(editor->getSnapshotCount()));
 
@@ -715,25 +715,28 @@ qDebug() << "mousePressEvent left button with toolMode " << toolMode << "\n";
 	    }
 
 	    QDomElement newOperation = doc.createElement("operation");
+		newOperation.setAttribute("opPosition", "STARTING");
+		newOperation.setAttribute("layerType", layer->type);
+		newOperation.setAttribute("toolMode", toolMode);
 
 		if(toolMode == COLOURING) {
 			if(layer->type == Layer::BITMAP) {
-			  newOperation.setAttribute("layerType", layer->type);
-		    newOperation.setAttribute("toolMode", toolMode);
+			  //newOperation.setAttribute("layerType", layer->type);
+		    //newOperation.setAttribute("toolMode", toolMode);
 				qreal opacity = 1.0;
 				qreal brushWidth = brush.width +  0.5*brush.feather;
 				qreal offset = qMax(0.0,brush.width-0.5*brush.feather)/brushWidth;
 				
-				newOperation.setAttribute("offset", QString("%1").arg(offset));
+				//newOperation.setAttribute("offset", QString("%1").arg(offset));
 				
 				if(tabletInUse) opacity = tabletPressure;
 				if(usePressure) brushWidth = brushWidth*tabletPressure;
 				
-				newOperation.setAttribute("brushWidth", QString("%1").arg(brushWidth));
-			newOperation.setAttribute("opacity", QString("%1").arg(opacity));
-			newOperation.setAttribute("lastPointX", QString("%1").arg(lastPoint.x()));
-			newOperation.setAttribute("lastPointY", QString("%1").arg(lastPoint.y()));
-			newOperation.setAttribute("brushColour", brush.colour.name());
+				//newOperation.setAttribute("brushWidth", QString("%1").arg(brushWidth));
+			//newOperation.setAttribute("opacity", QString("%1").arg(opacity));
+			//newOperation.setAttribute("lastPointX", QString("%1").arg(lastPoint.x()));
+			//newOperation.setAttribute("lastPointY", QString("%1").arg(lastPoint.y()));
+			//newOperation.setAttribute("brushColour", brush.colour.name());
 				
 				drawBrush( lastPoint, brushWidth, offset, brush.colour, opacity);
 				int rad = qRound(brushWidth / 2) + 3;
@@ -844,13 +847,14 @@ qDebug() << "mousePressEvent left button with toolMode " << toolMode << "\n";
 			// ---
 						
 		}
-         	//emit modification();
 
-         	//root.appendChild(newOperation);
-         	// Save changes to operations log
-         	file->resize(0);
-         	doc.save(out, 2);
-         	file->close();
+     	//emit modification();
+
+     	root.appendChild(newOperation);
+     	// Save changes to operations log
+     	file->resize(0);
+     	doc.save(out, 2);
+     	file->close();
 	}
 }
 
@@ -1041,6 +1045,49 @@ void ScribbleArea::mouseReleaseEvent(QMouseEvent *event)
 	}
 	// ---- end checks ------
 
+    bool createdNew = false;
+    QDomDocument doc;
+    QString snapshotDir = editor->getSnapshotDir(); 
+    QFile* file = new QFile(QString(snapshotDir + ((snapshotDir.endsWith("/")) ? "":"/") + "snapshotOperations%1.log").arg(editor->getSnapshotCount()));
+
+    if (!file->exists())
+    {
+	    doc = QDomDocument("PencilOperationsSaveLog");
+	    createdNew = true;
+    }
+
+    if (!file->open(QFile::ReadWrite | QFile::Text)) {
+	    //QMessageBox::warning(this, "Warning", "Cannot write file");
+	    qDebug() << "Warning: Cannot write operations log file";
+	    return;
+    }
+
+    QTextStream out(file);
+
+    if (!createdNew && !doc.setContent(file))
+    {
+	    qDebug() << "operations log file is not XML file";
+	    return; // this is not a XML file
+    }
+    QDomDocumentType type = doc.doctype();
+    if (type.name() != "PencilOperationsSaveLog") {
+	    qDebug() << "Warning: This is not a Pencil Snapshot save log document";
+	    return;
+    }
+
+    // Add new snapshot and operations log info to main log file
+    QDomNode root = doc.documentElement();
+    if(root.isNull())
+    {
+	    root = doc.createElement("operations");
+	    doc.appendChild(root);
+    }
+
+    QDomElement newOperation = doc.createElement("operation");
+	newOperation.setAttribute("opPosition", "ENDING");
+	newOperation.setAttribute("layerType", layer->type);
+	newOperation.setAttribute("toolMode", toolMode);
+
 	//currentWidth = myPenWidth;
 	if(layer->type == Layer::BITMAP || layer->type == Layer::VECTOR) {
 		if ((event->button() == Qt::LeftButton) && (toolMode == ScribbleArea::PENCIL || toolMode == ScribbleArea::ERASER || toolMode == ScribbleArea::PEN)) {
@@ -1226,6 +1273,14 @@ void ScribbleArea::mouseReleaseEvent(QMouseEvent *event)
 	// ----------------------------------------------------------------------
 	//update();
 	tabletInUse = false;
+
+ 	//emit modification();
+
+ 	root.appendChild(newOperation);
+ 	// Save changes to operations log
+ 	file->resize(0);
+ 	doc.save(out, 2);
+ 	file->close();
 }
 
 void ScribbleArea::mouseDoubleClickEvent(QMouseEvent *event)
@@ -1715,6 +1770,7 @@ void ScribbleArea::drawLineTo(const QPointF &endPixel, const QPointF &endPoint)
 		//BitmapImage* bitmapImage = ((LayerBitmap*)layer)->getLastBitmapImageAtFrame(editor->currentFrame, 0);
 		//if(bitmapImage == NULL) { qDebug() << "NULL image pointer!" << editor->currentLayer << editor->currentFrame;  return; }
 
+		newOperation.setAttribute("opPosition", "DRAWING");
 		newOperation.setAttribute("layerType", layer->type);
 
 		newOperation.setAttribute("toolMode", toolMode);
@@ -1798,9 +1854,10 @@ void ScribbleArea::drawLineTo(const QPointF &endPixel, const QPointF &endPoint)
 		}
 	}
 	if(layer->type == Layer::VECTOR) {
-	        newOperation.setAttribute("layerType", layer->type);
+		newOperation.setAttribute("opPosition", "DRAWING");
+	    newOperation.setAttribute("layerType", layer->type);
+	    newOperation.setAttribute("toolMode", toolMode);
 
-	        newOperation.setAttribute("toolMode", toolMode);
 		if (toolMode == ScribbleArea::ERASER) {
 		       	newOperation.setAttribute("lastPixelX", QString("%1").arg(lastPixel.x()));
 			newOperation.setAttribute("lastPixelY", QString("%1").arg(lastPixel.y()));
@@ -1867,8 +1924,8 @@ void ScribbleArea::drawLineTo(const QPointF &endPixel, const QPointF &endPoint)
 	}
 
 	//emit modification();
+    root.appendChild(newOperation);
 
-        root.appendChild(newOperation);
 	// Save changes to operations log
 	file->resize(0);
 	doc.save(out, 2);
