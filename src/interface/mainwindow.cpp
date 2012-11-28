@@ -18,8 +18,13 @@ GNU General Public License for more details.
 #include "mainwindow.h"
 #include "object.h"
 #include <interfaces.h>
+#include <QGridLayout>
+#include <QPushButton>
+#include <QComboBox>
 
 MainWindow::MainWindow() {
+
+    
 	editor = new Editor(this);
 	//Object* object = new Object();
 	//object->defaultInitialisation();
@@ -33,6 +38,53 @@ MainWindow::MainWindow() {
 	createMenus();
 	loadPlugins();
 	readSettings();
+    
+    /*
+     *Check if the snapshot directory exists or not
+     *if yes-> continue and put snapshots in QCombobox
+     *if not-> exit and continue like normal paint operations
+     */
+
+    //QDir directory("/home/grad/workspace/ece1724-pencil/ece1724-pencil/snap");
+    QDir directory(QDir::currentPath() + "/snapshots");
+    if (!directory.exists()) {
+            qDebug() << "Directory Doesn't exists";
+        }
+    else {
+         QStringList files = directory.entryList(QDir::Files);
+         //Debugging purpose only     
+         qDebug() << "Directory exists";
+         foreach(QString itm, files)
+         {
+                qDebug() << itm;
+         }
+        QWidget *window = new QWidget;
+        window->setWindowTitle("Snapshots");
+        QGridLayout *layout = new QGridLayout;
+        QComboBox *qbox;
+        QPushButton *button;
+        qbox = new QComboBox();
+        layout->addWidget(qbox,0,0,1,2);
+        foreach(QString itm, files)
+        {
+            qbox->addItem(itm);
+        }
+
+        button = new QPushButton("Load Snapshot");
+        layout->addWidget(button,2,0,1,2);
+
+        window->setLayout(layout);
+        window->show();
+    }
+
+}
+
+void MainWindow::on_pushButton_clicked()
+{
+
+    qDebug() << "Hurray the Select button is being clicked";
+    //QMessageBox::information(this,"tittle",qbox->currentText());
+
 }
 
 void MainWindow::arrangePalettes() {

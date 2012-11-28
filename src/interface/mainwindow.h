@@ -16,6 +16,12 @@ GNU General Public License for more details.
 #include <QtGui>
 #include <QObject>
 #include "editor.h"
+#include <QStringList>
+#include <QWidget>
+#include <QGridLayout>
+#include <QPushButton>
+#include <QComboBox>
+
 class MainWindow : public QMainWindow
 {
     Q_OBJECT
@@ -43,6 +49,7 @@ private:
 	void keyReleaseEvent( QKeyEvent *e);
 	void readSettings();
 	void writeSettings();
+    void on_pushButton_clicked();
 	
 	Editor *editor;
 	

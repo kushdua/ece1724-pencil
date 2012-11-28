@@ -14,9 +14,11 @@ GNU General Public License for more details.
 
 */
 #include "object.h"
+#include <QDebug>
 
 void initialise() {
-  // nothing, for now
+//nothing to do now
+
 }
 
 void Object::exportMovie(int startFrame, int endFrame, QMatrix view, Layer* currentLayer, QSize exportSize, QString filePath, int fps) {

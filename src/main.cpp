@@ -25,6 +25,9 @@ int main(int argc, char *argv[])
 #ifndef Q_WS_MAC
 	app.setWindowIcon(QIcon(":/icons/icon.png"));
 #endif
+
+
+
 	initialise();
 	/*QDir dir(QApplication::applicationDirPath());
 	dir.cdUp();

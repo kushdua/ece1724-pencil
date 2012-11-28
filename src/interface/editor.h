@@ -21,6 +21,9 @@ GNU General Public License for more details.
 #include <QMainWindow>
 #include <QLabel>
 #include <QToolButton>
+#include <QGridLayout>
+#include <QPushButton>
+#include <QComboBox>
 #include "timeline.h"
 #include "scribblearea.h"
 #include "toolset.h"
