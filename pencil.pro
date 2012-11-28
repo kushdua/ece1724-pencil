@@ -34,6 +34,7 @@ HEADERS += src/interfaces.h \
            src/structure/layersound.h \
            src/structure/layervector.h \
            src/structure/object.h \
+           src/interface/logger.h \
            src/interface/editor.h \
            src/interface/mainwindow.h \
            src/interface/palette.h \
@@ -58,6 +59,7 @@ SOURCES += src/external/flash/flash.cpp \
            src/structure/layersound.cpp \
            src/structure/layervector.cpp \
            src/structure/object.cpp \
+           src/interface/logger.cpp \
            src/interface/editor.cpp \
            src/interface/mainwindow.cpp \
            src/interface/palette.cpp \

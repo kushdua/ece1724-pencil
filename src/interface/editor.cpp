@@ -34,12 +34,17 @@ Editor::Editor(QMainWindow* parent)
 	mainWindow = parent;
 	
 	QSettings settings("Pencil","Pencil");
-	
+
 	object = NULL; // the editor is initialized with no object
 	savedName = "";
-	snapshotCount = 0;
-	snapshotDir = "/autofs/fs1.ece/fs1.eecg.steffan/r/r1/rashidm1/Desktop/PencilSnaps/";
+
+	snapshotDir = QDir::currentPath() + "/snapshots/";
 	settings.setValue("snapshotDir", snapshotDir);
+	mainLogFilePath = snapshotDir + "snapshots.log";
+
+	//TODO: Remove this when introducing bugs
+	removeSnapshots();
+
 	altpress=false;
 	modified=false;
 	numberOfModifications = 0;
@@ -229,6 +234,19 @@ void Editor::showCounter(int n) {
 	toolSet->setCounter(n);
 }
 
+void Editor::removeSnapshots() {
+	snapshotCount = 0;
+	QString rmSnapshotCommand;
+
+	if (snapshotDir.endsWith("/"))
+		rmSnapshotCommand = "rm -rf " + snapshotDir + "*";
+	else
+		rmSnapshotCommand = "rm -rf " + snapshotDir + "/*";
+
+	qDebug() << "REMOVE CMD: " << rmSnapshotCommand;
+	system(rmSnapshotCommand.toUtf8().constData());
+}
+
 void Editor::newDocument() {
 	if (maybeSave()) {
 		//if (!exportFramesDialog) createNewDocumentDialog();
@@ -237,6 +255,9 @@ void Editor::newDocument() {
 		//QSize documentSize = QSize(newDocumentDialog_hBox->value(), newDocumentDialog_vBox->value());
 		//newObject(documentSize);
 		newObject(); // default size
+
+		//Remove all snapshots/logs
+		removeSnapshots();
 	}
 }
 
@@ -253,19 +274,24 @@ void Editor::openDocument()
 				newObject();
 			}
 		}
+
+		//Remove all snapshots/logs
+		removeSnapshots();
 	}
 }
 
 void Editor::openRecent() {
 	QSettings settings("Pencil","Pencil");
 	QString myPath = settings.value("lastFilePath", QVariant(QDir::homePath())).toString();
+
 	bool ok = openObject(myPath);
 	if(!ok) {
 		QMessageBox::warning(this, "Warning", "Pencil cannot read this file. If you want to import images, use the command import.");
 		newObject();
 	}
-	snapshotCount = 0;
-	//TODO: Remove all snapshots/logs
+
+	//Remove all snapshots/logs
+	removeSnapshots();
 }
 
 bool Editor::saveDocument()
@@ -279,9 +305,14 @@ bool Editor::saveDocument()
 			
 	if (fileName.isEmpty()) {
 		return false;
-	} else {
+	}
+	else {
 		QSettings settings("Pencil","Pencil");
 		settings.setValue("lastFilePath", QVariant(fileName));
+
+		//Remove all snapshots/logs
+		removeSnapshots();
+
 		return saveObject(fileName);
 	}
 }
@@ -505,6 +536,13 @@ void Editor::changeAutosaveNumber(int number) {
 void Editor::changeSnapshotDir(QString newDir) {
 	snapshotDir = newDir;
 	qDebug() << "New Dir: " << newDir << "\n";
+
+	if (snapshotDir.endsWith("/"))
+		mainLogFilePath = snapshotDir + "snapshots.log";
+	else
+		mainLogFilePath = snapshotDir + "/snapshots.log";
+	qDebug() << "Main log file path: " << mainLogFilePath;
+
 	QSettings settings("Pencil","Pencil");
 	settings.setValue("snapshotDir", newDir);
 }
@@ -523,8 +561,7 @@ void Editor::modification(int layerNumber) {
 	numberOfModifications++;
 	if(autosave && numberOfModifications > autosaveNumber) {
 		numberOfModifications = 0;
-		//saveObject(savedName + "/temp/snapshot" + snapshotCount);
-		saveObject(snapshotDir + "snap" + QString::number(snapshotCount));
+		saveObject(snapshotDir + "snap" + QString::number(snapshotCount), true);
 		snapshotCount++;
 	}
 }
@@ -846,7 +883,7 @@ bool Editor::maybeSave()
     return true;
 }
 
-bool Editor::saveObject(QString filePath)
+bool Editor::saveObject(QString filePath, bool snapshotSave)
 {
 	QFileInfo fileInfo(filePath);
 	if(fileInfo.isDir()) return false;
@@ -857,20 +894,29 @@ bool Editor::saveObject(QString filePath)
 		dir.mkpath(filePath+".data"); // creates a directory with the same name +".data"
 	}
 	
-	savedName=filePath;
-	mainWindow->setWindowTitle(savedName);
+	QProgressDialog *progress = NULL;
+
+	if (snapshotSave == false) {
+		savedName=filePath;
+		mainWindow->setWindowTitle(savedName);
+
+		progress = new QProgressDialog("Saving document...", "Abort", 0, 100, mainWindow);
+		progress->setWindowModality(Qt::WindowModal);
+		progress->show();
+	}
 	
-	QProgressDialog progress("Saving document...", "Abort", 0, 100, mainWindow);
-	progress.setWindowModality(Qt::WindowModal);
-	progress.show();
 	int progressValue = 0;
 	
 	// save data
 	int nLayers = object->getLayerCount();
 	for(int i=0; i < nLayers; i++) {
 		qDebug() << "Saving Layer " << i;
-		progressValue = (i*100)/nLayers;
-		progress.setValue(progressValue);
+
+		if (snapshotSave == false) {
+			progressValue = (i*100)/nLayers;
+			progress->setValue(progressValue);
+		}
+
 		Layer* layer = object->getLayer(i);
 		if(layer->type == Layer::BITMAP) ((LayerBitmap*)layer)->saveImages(filePath+".data", i);
 		if(layer->type == Layer::VECTOR) ((LayerVector*)layer)->saveImages(filePath+".data", i);
@@ -902,10 +948,67 @@ bool Editor::saveObject(QString filePath)
 	doc.save(out, IndentSize);
 	// -----------------------------------
 
-	progress.setValue(100);
+	if (snapshotSave == false) {
+		progress->setValue(100);
+	}
 	
 	object->modified = false;
 	timeLine->updateContent();
+
+	delete progress;
+
+	if (snapshotSave) {
+		bool createdNew = false;
+		QDomDocument doc;
+		//append this snapshot and associated operations log in main log file
+		QFile* file = new QFile(mainLogFilePath);
+
+		if (!file->exists()) {
+			doc = QDomDocument("PencilSnapshotSaveLog");
+			createdNew = true;
+		}
+
+		if (!file->open(QFile::ReadWrite | QFile::Text)) {
+			//QMessageBox::warning(this, "Warning", "Cannot write file");
+			qDebug("ERROR: Cannot write main log file");
+			return false;
+		}
+
+		QTextStream out(file);
+
+		// Open main log file
+		if (!createdNew && !doc.setContent(file)) {
+			qDebug("ERROR: main log file is not XML file");
+			return false; // this is not a XML file
+		}
+
+		QDomDocumentType type = doc.doctype();
+		if (type.name() != "PencilSnapshotSaveLog") {
+			qDebug("ERROR: this is not a Pencil Snapshot save log document");
+			return false; // this is not a XML file
+		}
+
+		// Add new snapshot and operations log info to main log file
+		QDomNode root = doc.documentElement();
+		if (root.isNull()) {
+			root = doc.createElement("snapshots");
+			doc.appendChild(root);
+		}
+
+		QDomElement newSnapshot = doc.createElement("snapshot");
+		newSnapshot.setAttribute("snapshotFile", filePath);
+		newSnapshot.setAttribute("snapshotLogFile",
+				QString(
+						snapshotDir + ((snapshotDir.endsWith("/")) ? "" : "/")
+								+ "snapshotOperations%1.log").arg(snapshotCount));
+		root.appendChild(newSnapshot);
+
+		// Save changes
+		file->resize(0);
+		doc.save(out, IndentSize);
+		file->close();
+	}
+
 	return true;
 }
 
@@ -917,8 +1020,6 @@ void Editor::newObject() {
 	setObject(newObject);
 	updateObject();
 	savedName = "";
-	snapshotCount = 0;
-	//TODO: Remove all snapshots/logs
 	mainWindow->setWindowTitle(tr("Pencil v0.4.4b"));
 }
 
@@ -972,8 +1073,6 @@ bool Editor::openObject(QString filePath) {
 	progress.show();
 	
 	savedName = filePath;
-	snapshotCount = 0;
-	//TODO: Remove all snapshots/logs
 
 	QSettings settings("Pencil","Pencil");
 	settings.setValue("lastFilePath", QVariant(savedName) );
