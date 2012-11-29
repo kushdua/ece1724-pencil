@@ -38,7 +38,7 @@ MainWindow::MainWindow() {
 	createMenus();
 	loadPlugins();
 	readSettings();
-    
+
     /*
      *Check if the snapshot directory exists or not
      *if yes-> continue and put snapshots in QCombobox
@@ -56,7 +56,7 @@ MainWindow::MainWindow() {
          qDebug() << "Directory exists";
          foreach(QString itm, files)
          {
-                qDebug() << itm;
+         //       qDebug() << itm;
          }
         QWidget *window = new QWidget;
         window->setWindowTitle("Snapshots");
@@ -74,7 +74,8 @@ MainWindow::MainWindow() {
         layout->addWidget(button,2,0,1,2);
 
         window->setLayout(layout);
-        window->show();
+        //currently commented out, so that QT window doesnt show up
+        //window->show();
     }
 
 }

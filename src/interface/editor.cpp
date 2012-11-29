@@ -75,6 +75,8 @@ Editor::Editor(QMainWindow* parent)
 	
 	scribbleArea = new ScribbleArea(this, this);
 	timeLine = new TimeLine(this, this);
+
+
 	
 	toolSet = new ToolSet();
 	palette = new Palette(this);

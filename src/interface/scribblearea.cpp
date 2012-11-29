@@ -1715,8 +1715,46 @@ void ScribbleArea::drawBrush(QPointF thePoint, qreal brushWidth, qreal offset, Q
 	bufferImg->paste(tempBitmapImage);
 	delete tempBitmapImage;
 }
+    
+//function call for testing purposes
+//scribbleArea.restoreSnapshot("/home/grad/workspace/ece1724-pencil/ece1724-pencil/snap/sample.xml");
+void ScribbleArea::restoreSnapshot(QString snapshotFile)
+{
+    QFileInfo fileInfo(snapshotFile);
+	if( fileInfo.isDir() ) return;
+	QFile* file = new QFile(snapshotFile);
+	if (!file->open(QFile::ReadOnly)) return;
+	QDomDocument doc;
 
-void ScribbleArea::drawLineTo(const QPointF &endPixel, const QPointF &endPoint)
+	//Read XML file
+    //bool ok = true;
+	QDomElement docElem = doc.documentElement();
+	if(docElem.isNull()) return;
+
+
+		QDomNode tag = docElem.firstChild();
+		while(!tag.isNull()) {
+            //recreated in every iteartion of the loop
+			QDomElement element = tag.toElement(); // try to convert the node to an element.
+			if(!element.isNull()) {
+				if(element.tagName() == "operation") {
+					//loadDomElement(element, snapshotFile);
+                    //if statemenst to grap all the attributes and assign it the the variable in order
+                    QString toolmode;
+                    toolmode = element.attribute("toolMode");
+                    qDebug() << toolmode;
+				}
+			}
+			tag = tag.nextSibling();
+	} 
+	//Get QDomNode for each operation (ignore starting/ending) => ITERATE OVER OPERATIONS
+
+	//Set values such as lastPoint.setx()/setY(), whatever the drawLineTo needs for the layerType and operationType
+
+	//drawLineTo(endPixel or NULL, endPoint or NULL, false);
+}
+
+void ScribbleArea::drawLineTo(const QPointF &endPixel, const QPointF &endPoint, bool saveOperation)
 {
 	qDebug() << "Drawing a line";
 

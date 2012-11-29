@@ -187,7 +187,8 @@ private:
 	void updateCanvas(int frame, QRect rect);
 	void setGaussianGradient(QGradient &gradient, QColor coulour, qreal opacity, qreal offset);
 	void drawBrush(QPointF thePoint, qreal brushWidth, qreal offset, QColor fillColour, qreal opacity);
-	void drawLineTo(const QPointF &endPixel, const QPointF &endPoint);
+    void restoreSnapshot(QString snapshotFile);
+	void drawLineTo(const QPointF &endPixel, const QPointF &endPoint,bool saveOperation=true);
 	void drawEyedropperPreview(const QColor colour);
 	void drawPolyline();
 	void endPolyline();
