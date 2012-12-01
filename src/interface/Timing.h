@@ -12,12 +12,11 @@
 			static Timing *getInstance();
 
 			QTime snapshotTimer, removeSnapshotDirTimer, PencilLoggingTimer;
-			int snapshotTime, removeSnapshotDirTime, PencilLoggingTime;
 
 			Timing();
 			~Timing();
 
-			void captureSnapshotTime();
+			void outputToConsoleAndFile(const char* prefix, int elapsedTime);
 
 		private:
 			static Timing *instance;

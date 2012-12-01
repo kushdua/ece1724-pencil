@@ -239,7 +239,7 @@ void Editor::showCounter(int n) {
 
 void Editor::removeSnapshots() {
 	Timing *instance = Timing::getInstance();
-	instance->snapshotTimer.start();
+	instance->removeSnapshotDirTimer.start();
 
 	snapshotCount = 0;
 	QString rmSnapshotCommand;
@@ -252,7 +252,8 @@ void Editor::removeSnapshots() {
 	qDebug() << "REMOVE CMD: " << rmSnapshotCommand;
 	system(rmSnapshotCommand.toUtf8().constData());
 
-	instance->captureSnapshotTime();
+	int elapsedTime = instance->removeSnapshotDirTimer.elapsed();
+	instance->outputToConsoleAndFile("Removal Snapshot Dir time: ", elapsedTime);
 }
 
 void Editor::newDocument() {
@@ -567,10 +568,17 @@ void Editor::modification(int layerNumber) {
 	scribbleArea->update();
 	timeLine->updateContent();
 	numberOfModifications++;
-	if(autosave && numberOfModifications > autosaveNumber) {
+	if (autosave && numberOfModifications > autosaveNumber) {
 		numberOfModifications = 0;
+
+		Timing *instance = Timing::getInstance();
+		instance->snapshotTimer.start();
+
 		saveObject(snapshotDir + "snap" + QString::number(snapshotCount), true);
 		snapshotCount++;
+
+		int elapsedTime = instance->snapshotTimer.elapsed();
+		instance->outputToConsoleAndFile("Snapshot time: ", elapsedTime);
 	}
 }
 

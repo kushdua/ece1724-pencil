@@ -33,12 +33,18 @@ Timing::Timing() {
 Timing::~Timing() {
 }
 
-void Timing::captureSnapshotTime() {
-	int elapsedTime = snapshotTimer.elapsed();
+void Timing::captureRemoveSnapshotDirTime() {
+	outputToConsoleAndFile("Removal Snapshot Dir time: ", removeSnapshotDirTimer.elapsed());
+}
 
-	qDebug() << "Removal time: " << elapsedTime << "ms";
+void Timing::captureSnapshotTime() {
+	outputToConsoleAndFile("Snapshot time: ", snapshotTimer.elapsed());
+}
+
+void Timing::outputToConsoleAndFile(const char* prefix, int elapsedTime) {
+	qDebug() << prefix << elapsedTime << "ms";
 
 	QTextStream timingTextStream(&timingFile);
-	timingTextStream << "Removal time: " << elapsedTime << "ms\n";
+	timingTextStream << prefix << elapsedTime << "ms\n";
 	timingTextStream.flush();
 }
