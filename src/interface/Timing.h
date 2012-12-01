@@ -11,7 +11,7 @@
 		public:
 			static Timing *getInstance();
 
-			QTime snapshotTimer, removeSnapshotDirTimer, PencilLoggingTimer;
+			QTime overallStartupTime, snapshotTimer, removeSnapshotDirTimer, PencilLoggingTimer;
 
 			Timing();
 			~Timing();

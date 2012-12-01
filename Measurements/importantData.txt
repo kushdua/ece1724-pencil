@@ -1,0 +1,3 @@
+Timing Measurements
+Removal Snapshot Dir time: 4093ms
+overall Startup Time: 4291ms

@@ -16,11 +16,15 @@ GNU General Public License for more details.
 #include <QApplication>
 #include <QDir>
 #include "mainwindow.h"
+#include "interface/Timing.h"
 
 void initialise();
 
 int main(int argc, char *argv[])
 {
+	Timing *instance = Timing::getInstance();
+	instance->overallStartupTime.start();
+
 	QApplication app(argc, argv);
 #ifndef Q_WS_MAC
 	app.setWindowIcon(QIcon(":/icons/icon.png"));
@@ -38,6 +42,10 @@ int main(int argc, char *argv[])
 	mainWindow.show();
 	qDebug() << "MainWindow thread" << mainWindow.thread();
 	qDebug() << "App thread" << app.thread();
+
+	int elapsedTime = instance->overallStartupTime.elapsed();
+	instance->outputToConsoleAndFile("overall Startup Time: ", elapsedTime);
+
 	return app.exec();
 }
 
