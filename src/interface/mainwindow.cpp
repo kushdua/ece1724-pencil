@@ -53,11 +53,11 @@ MainWindow::MainWindow() {
     else {
          QStringList files = directory.entryList(QDir::Files);
          //Debugging purpose only     
-         qDebug() << "Directory exists";
-         foreach(QString itm, files)
+         //qDebug() << "Directory exists";
+         /*foreach(QString itm, files)
          {
-         //       qDebug() << itm;
-         }
+                qDebug() << itm;
+         }*/
         QWidget *window = new QWidget;
         window->setWindowTitle("Snapshots");
         QGridLayout *layout = new QGridLayout;
@@ -74,7 +74,7 @@ MainWindow::MainWindow() {
         layout->addWidget(button,2,0,1,2);
 
         window->setLayout(layout);
-        //currently commented out, so that QT window doesnt show up
+        //currently commented out, so that QT window doesnt show up -- will deal with this later
         //window->show();
     }
 

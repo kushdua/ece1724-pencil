@@ -171,6 +171,9 @@ ScribbleArea::ScribbleArea(QWidget *parent, Editor* editor)
 	//setAutoFillBackground (false);
 	//setAttribute(Qt::WA_OpaquePaintEvent, false);
 	//setAttribute(Qt::WA_NoSystemBackground, true);
+
+    //Calling the restore snapshot right after scrible area is constructed - dont know where to call it
+    //restoreSnapshot("/home/grad/workspace/ece1724-pencil/ece1724-pencil/snap/sample.xml");
 }
 
 void ScribbleArea::setColour(const int i)
@@ -850,10 +853,10 @@ qDebug() << "mousePressEvent left button with toolMode " << toolMode << "\n";
 
      	//emit modification();
 
-     	root.appendChild(newOperation);
-     	// Save changes to operations log
-     	file->resize(0);
-     	doc.save(out, 2);
+     	    root.appendChild(newOperation);
+     	    // Save changes to operations log
+     	    file->resize(0);
+     	    doc.save(out, 2);
      	file->close();
 	}
 }
@@ -1720,38 +1723,90 @@ void ScribbleArea::drawBrush(QPointF thePoint, qreal brushWidth, qreal offset, Q
 //scribbleArea.restoreSnapshot("/home/grad/workspace/ece1724-pencil/ece1724-pencil/snap/sample.xml");
 void ScribbleArea::restoreSnapshot(QString snapshotFile)
 {
+    qDebug() << "Time to restore the snapshot using logs";
     QFileInfo fileInfo(snapshotFile);
-	if( fileInfo.isDir() ) return;
+	if(fileInfo.isDir()) return;
+    qDebug() << "Directory exists";
 	QFile* file = new QFile(snapshotFile);
 	if (!file->open(QFile::ReadOnly)) return;
+    qDebug() << "File opened as read only";
 	QDomDocument doc;
+    //QPointF &endPoint= NULL;
 
-	//Read XML file
+	qDebug() << "Read XML file";
     //bool ok = true;
 	QDomElement docElem = doc.documentElement();
-	if(docElem.isNull()) return;
-
-
+	//if(docElem.isNull()) return;
+ 
 		QDomNode tag = docElem.firstChild();
+        qDebug() << "Entering the while loop";
+        //Get QDomNode for each operation (ignore starting/ending) => ITERATE OVER OPERATIONS
 		while(!tag.isNull()) {
+            qDebug() << "Entered the while loop";
             //recreated in every iteartion of the loop
 			QDomElement element = tag.toElement(); // try to convert the node to an element.
+
 			if(!element.isNull()) {
 				if(element.tagName() == "operation") {
 					//loadDomElement(element, snapshotFile);
-                    //if statemenst to grap all the attributes and assign it the the variable in order
-                    QString toolmode;
-                    toolmode = element.attribute("toolMode");
+                    //following code to grap all the attributes and assign it the the variable in order 
+	                //Setting values such as lastPoint.setx()/setY(), etc according to what the drawLineTo needs for the layerType and operationType
+                    //TODO: have to add if statements at a later time
+        
+                    //grabing toolMode
+                    QString toolmode = element.attribute("toolMode");
                     qDebug() << toolmode;
+                    //testing for pencil at the moment
+                    //if(toolmode=='0') toolMode = ScribbleArea::PENCIL;
+                    //continue with the rest of enum modes
+
+                    //Grab lastPointY--commented out getting a weird error
+                    bool ok;
+                    QString lasty = element.attribute("lastPointY");
+                    //lastPoint.y() = lasty.toInt(&ok,10);
+
+
+                    //Grab the current width
+                    QString width = element.attribute("currentWidth");
+                    currentWidth = width.toFloat (&ok);
+
+                    //Grab the current color
+                    QString color = element.attribute("currentColour");
+                    //TODO : convert Qstring into Qcolor
+
+                    //temp commented out -- getting a weird error
+                    //Grab the endpointx
+                    QString endx = element.attribute("endPointX");
+                    //endPoint.x() = endx.toInt (&ok,10);
+
+                    //Grab the endpointy
+                    QString endy = element.attribute("endPointY");
+                    //endPoint.y() = endy.toInt (&ok,10);
+                    
+                    //TODO: hardcoded might need to change it
+                    //layer->type= Layer::BITMAP;
+        
+                    //Grab antialiasing
+                    QString antialias = element.attribute("antialiasing");
+                    int temp;
+                    temp = antialias.toInt (&ok,10);
+                    if(temp)
+                        antialiasing = true;        
+                    else
+                        antialiasing = false;
+
+                    //Grab lastPointX  --commented out getting a weird error
+                    QString lastx = element.attribute("lastPointX");
+                    //lastPoint.x() = lastx.toInt(&ok,10);
+
 				}
 			}
-			tag = tag.nextSibling();
+            //drawLineTo(endPixel or NULL, endPoint or NULL, false);
+			tag = tag.nextSibling();           
 	} 
-	//Get QDomNode for each operation (ignore starting/ending) => ITERATE OVER OPERATIONS
+    qDebug() << "while loop exited";
 
-	//Set values such as lastPoint.setx()/setY(), whatever the drawLineTo needs for the layerType and operationType
 
-	//drawLineTo(endPixel or NULL, endPoint or NULL, false);
 }
 
 void ScribbleArea::drawLineTo(const QPointF &endPixel, const QPointF &endPoint, bool saveOperation)
@@ -1962,11 +2017,15 @@ void ScribbleArea::drawLineTo(const QPointF &endPixel, const QPointF &endPoint, 
 	}
 
 	//emit modification();
-    root.appendChild(newOperation);
 
-	// Save changes to operations log
-	file->resize(0);
-	doc.save(out, 2);
+	if(saveOperation)
+	{
+        root.appendChild(newOperation);
+
+	    // Save changes to operations log
+	    file->resize(0);
+	    doc.save(out, 2);
+    }
 	file->close();
 
 	lastPixel = endPixel;
