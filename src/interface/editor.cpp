@@ -28,6 +28,7 @@ GNU General Public License for more details.
 #include "layersound.h"
 #include "layercamera.h"
 
+#include "Timing.h"
 
 Editor::Editor(QMainWindow* parent)
 {
@@ -237,6 +238,9 @@ void Editor::showCounter(int n) {
 }
 
 void Editor::removeSnapshots() {
+	Timing *instance = Timing::getInstance();
+	instance->snapshotTimer.start();
+
 	snapshotCount = 0;
 	QString rmSnapshotCommand;
 
@@ -247,6 +251,8 @@ void Editor::removeSnapshots() {
 
 	qDebug() << "REMOVE CMD: " << rmSnapshotCommand;
 	system(rmSnapshotCommand.toUtf8().constData());
+
+	instance->captureSnapshotTime();
 }
 
 void Editor::newDocument() {
