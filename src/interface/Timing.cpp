@@ -15,10 +15,6 @@ Timing *Timing::getInstance()
 }
 
 Timing::Timing() {
-	snapshotTime = 0;
-	removeSnapshotDirTime = 0;
-	PencilLoggingTime = 0;
-
 	timingFile.setFileName(QString::fromUtf8(TIMING_FILE_PATH));
 	if (!timingFile.open(QIODevice::WriteOnly | QIODevice::Text)) {
 		qDebug() << "Could not open timing file.";
@@ -31,14 +27,6 @@ Timing::Timing() {
 }
 
 Timing::~Timing() {
-}
-
-void Timing::captureRemoveSnapshotDirTime() {
-	outputToConsoleAndFile("Removal Snapshot Dir time: ", removeSnapshotDirTimer.elapsed());
-}
-
-void Timing::captureSnapshotTime() {
-	outputToConsoleAndFile("Snapshot time: ", snapshotTimer.elapsed());
 }
 
 void Timing::outputToConsoleAndFile(const char* prefix, int elapsedTime) {
