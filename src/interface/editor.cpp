@@ -39,12 +39,14 @@ Editor::Editor(QMainWindow* parent)
 	object = NULL; // the editor is initialized with no object
 	savedName = "";
 
+    //TODO: During restore inform user auto save will overwrite previous snapshots during normal program execution if they cancel restore
+    snapshotCount=0;
 	snapshotDir = QDir::currentPath() + "/snapshots/";
 	settings.setValue("snapshotDir", snapshotDir);
 	mainLogFilePath = snapshotDir + "snapshots.log";
 
-	//TODO: Remove this when introducing bugs
-	removeSnapshots();
+	//TODO: Remove this when introducing bugs - NO; ONLY DELETE ON NORMAL EXIT OR USER SAVE
+	//removeSnapshots();
 
 	altpress=false;
 	modified=false;
@@ -203,12 +205,18 @@ Editor::Editor(QMainWindow* parent)
 	qDebug() << QLibraryInfo::location(QLibraryInfo::LibrariesPath);
 	
 	setAcceptDrops(true);
+
+    //Restore first operations log file by default for now... if it exists! :o
+    scribbleArea->restoreSnapshot("snapshots/snapshotOperations0.log");
 }
 
 Editor::~Editor() {
 	// a lot more probably needs to be cleaned here...
+    maybeSave(true);
 	if (object) delete object;
 	clearBackup();
+    qDebug() << "Pencil exiting..." << "\n";
+    removeSnapshots();
 }
 
 void Editor::dragEnterEvent(QDragEnterEvent *event)
@@ -880,9 +888,9 @@ void Editor::helpBox() {
 	}
 
 
-bool Editor::maybeSave()
+bool Editor::maybeSave(bool isDestructor)
 {
-    if (object->modified) {
+    if (object->modified || (isDestructor && savedName.isEmpty())) {
         int ret = QMessageBox::warning(this, tr("Warning"),
                           tr("This animation has been modified.\n"
                              "Do you want to save your changes?"),

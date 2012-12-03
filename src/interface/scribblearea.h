@@ -73,7 +73,7 @@ public:
 	void setColour(const int);
 	void setColour(const QColor);
 	void resetColours();
-  //void restoreSnapshot(QString snapshotFile);
+    void restoreSnapshot(QString snapshotFile);
 	void deleteSelection();
 	void setSelection(QRectF rect, bool);
 	void displaySelectionProperties();
@@ -187,7 +187,7 @@ private:
 	void updateCanvas(int frame, QRect rect);
 	void setGaussianGradient(QGradient &gradient, QColor coulour, qreal opacity, qreal offset);
 	void drawBrush(QPointF thePoint, qreal brushWidth, qreal offset, QColor fillColour, qreal opacity);
-    void restoreSnapshot(QString snapshotFile);
+    //void restoreSnapshot(QString snapshotFile);
 	void drawLineTo(const QPointF &endPixel, const QPointF &endPoint,bool saveOperation=true);
 	void drawEyedropperPreview(const QColor colour);
 	void drawPolyline();

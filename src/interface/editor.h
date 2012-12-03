@@ -112,7 +112,7 @@ signals:
 	
 public slots:
 	void showCounter(int);
-	bool maybeSave();
+	bool maybeSave(bool isDestructor = false);
 	void importImage();
 	void importImage(QString filePath);
 	void importSound();

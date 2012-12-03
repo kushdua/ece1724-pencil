@@ -27,6 +27,7 @@ Timing::Timing() {
 }
 
 Timing::~Timing() {
+    if(timingFile.isOpen()) timingFile.close();
 }
 
 void Timing::outputToConsoleAndFile(const char* prefix, int elapsedTime) {
