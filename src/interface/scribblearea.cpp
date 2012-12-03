@@ -1731,7 +1731,7 @@ void ScribbleArea::restoreSnapshot(QString snapshotFile)
 	if (!file->open(QFile::ReadOnly)) return;
     qDebug() << "File opened as read only";
 	QDomDocument doc;
-    //QPointF &endPoint= NULL;
+    
 
 	qDebug() << "Read XML file";
     //bool ok = true;
@@ -1745,25 +1745,24 @@ void ScribbleArea::restoreSnapshot(QString snapshotFile)
             qDebug() << "Entered the while loop";
             //recreated in every iteartion of the loop
 			QDomElement element = tag.toElement(); // try to convert the node to an element.
-
 			if(!element.isNull()) {
 				if(element.tagName() == "operation") {
 					//loadDomElement(element, snapshotFile);
                     //following code to grap all the attributes and assign it the the variable in order 
 	                //Setting values such as lastPoint.setx()/setY(), etc according to what the drawLineTo needs for the layerType and operationType
-                    //TODO: have to add if statements at a later time
+                    //TODO: have to add if statements at a later time -- for pencil/pen toolmode only right now
         
                     //grabing toolMode
                     QString toolmode = element.attribute("toolMode");
                     qDebug() << toolmode;
                     //testing for pencil at the moment
-                    //if(toolmode=='0') toolMode = ScribbleArea::PENCIL;
+                    if(toolmode=="0") toolMode = ScribbleArea::PENCIL;
                     //continue with the rest of enum modes
 
                     //Grab lastPointY--commented out getting a weird error
                     bool ok;
                     QString lasty = element.attribute("lastPointY");
-                    //lastPoint.y() = lasty.toInt(&ok,10);
+                    lastPoint.setY(lasty.toInt(&ok,10));
 
 
                     //Grab the current width
@@ -1771,19 +1770,21 @@ void ScribbleArea::restoreSnapshot(QString snapshotFile)
                     currentWidth = width.toFloat (&ok);
 
                     //Grab the current color
-                    QString color = element.attribute("currentColour");
-                    //TODO : convert Qstring into Qcolor
+                    //QColor color(element.attribute("currentColour"));
+                    currentColour.setNamedColor(element.attribute("currentColour"));
 
-                    //temp commented out -- getting a weird error
-                    //Grab the endpointx
+                    //Have to do it this way .. grab the values from xml
+                    //create a pointf
+                    //Grab the endpointx and endpointy 
+                   
+                    QPointF endPoint;
                     QString endx = element.attribute("endPointX");
-                    //endPoint.x() = endx.toInt (&ok,10);
-
-                    //Grab the endpointy
+                    endPoint.setX(endx.toInt(&ok,10));
                     QString endy = element.attribute("endPointY");
-                    //endPoint.y() = endy.toInt (&ok,10);
+                    endPoint.setY(endy.toInt(&ok,10));
+                    //QPointF endPoint(endPointf);
                     
-                    //TODO: hardcoded might need to change it
+                    //Don't think we need to define it here .. drawlineTo function takes care of it -- double check please
                     //layer->type= Layer::BITMAP;
         
                     //Grab antialiasing
@@ -1795,13 +1796,16 @@ void ScribbleArea::restoreSnapshot(QString snapshotFile)
                     else
                         antialiasing = false;
 
-                    //Grab lastPointX  --commented out getting a weird error
+                    //Grab lastPointX 
                     QString lastx = element.attribute("lastPointX");
-                    //lastPoint.x() = lastx.toInt(&ok,10);
+                    lastPoint.setX(lastx.toInt(&ok,10));
+
+                    //calling the drawline method -- can't pass NULL
+                    drawLineTo(endPoint,endPoint,false);
 
 				}
 			}
-            //drawLineTo(endPixel or NULL, endPoint or NULL, false);
+
 			tag = tag.nextSibling();           
 	} 
     qDebug() << "while loop exited";
