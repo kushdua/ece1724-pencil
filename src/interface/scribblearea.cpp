@@ -1919,13 +1919,11 @@ void ScribbleArea::restoreSnapshot(QString snapshotFile)
 
                             QPointF lastBrushPoint;
                             QString lastbrptx = element.attribute("lastBrushPointX");
-                            lastPoint.setX(lastbrptx.toInt(&ok,10));
+                            lastBrushPoint.setX(lastbrptx.toInt(&ok,10));
                             QString lastbrpty = element.attribute("lastBrushPointY");
-                            lastPoint.setY(lastbrpty.toInt(&ok,10));
+                            lastBrushPoint.setY(lastbrpty.toInt(&ok,10));
 
                             QColor brushColour(element.attribute("currentColour"));
-
-                            qreal currentwidth = element.attribute("currentWidth").toFloat(&ok);
 
 			                qreal opacity = element.attribute("opacity").toFloat(&ok);
 			                qreal brushWidth = element.attribute("brushWidth").toFloat(&ok);
@@ -1949,11 +1947,22 @@ void ScribbleArea::restoreSnapshot(QString snapshotFile)
 //                    else if(layer->type == Layer::VECTOR)
                     else if(layerType.toInt(&ok,10) == Layer::VECTOR)
                     {
+                        QPointF endPixel;
+                        QString endpxx = element.attribute("endPixelX");
+                        endPixel.setX(endpxx.toInt(&ok,10));
+                        QString endpxy = element.attribute("endPixelY");
+                        endPixel.setY(endpxy.toInt(&ok,10));
+
+                        QPointF endPoint;
+                        QString endptx = element.attribute("endPointX");
+                        endPoint.setX(endptx.toInt(&ok,10));
+                        QString endpty = element.attribute("endPointY");
+                        endPoint.setY(endpty.toInt(&ok,10));
 //                        qDebug() << "New layer type is " << layer->type << " INSIDE VECTOR";
                         if(toolMode == ScribbleArea::PENCIL)
                         {
                             bool ok = true;
-                            QString lastpy = element.attribute("lastPixelY");
+/*                            QString lastpy = element.attribute("lastPixelY");
                             lastPixel.setY(lastpy.toInt(&ok,10));
 
                             //Grab lastPointX 
@@ -1994,10 +2003,27 @@ void ScribbleArea::restoreSnapshot(QString snapshotFile)
 
                             //calling the drawline method
                             drawLineTo(endPixel,endPoint,false);
+*/
+
+                            QPointF lastPixel;
+                            QString lastpxx = element.attribute("lastPixelX");
+                            lastPixel.setX(lastpxx.toInt(&ok,10));
+                            QString lastpxy = element.attribute("lastPixelY");
+                            lastPixel.setY(lastpxy.toInt(&ok,10));
+
+                            QPointF currentPixel;
+                            QString currpxx = element.attribute("currentPixelX");
+                            currentPixel.setX(currpxx.toInt(&ok,10));
+                            QString currpxy = element.attribute("currentPixelY");
+                            currentPixel.setY(currpxy.toInt(&ok,10));
+
+			                bufferImg->drawLine(lastPixel, currentPixel, QPen(QColor(element.attribute("currentColour")), 1, Qt::DotLine, Qt::RoundCap,Qt::RoundJoin), QPainter::CompositionMode_SourceOver, ((element.attribute("antialiasing").toInt(&ok, 10))?true:false));
+			                int rad = qRound(  ( element.attribute("currentWidth").toFloat(&ok)/2 + 2)*qAbs( element.attribute("antialiasing").toFloat(&ok) )  );
+			                update(QRect(lastPixel.toPoint(), endPixel.toPoint()).normalized().adjusted(-rad, -rad, +rad, +rad));
                         }
                         else if(toolMode == ScribbleArea::PEN)
                         {
-                            bool ok = true;
+/*                            bool ok = true;
                             QString lastpy = element.attribute("lastPixelY");
                             lastPixel.setY(lastpy.toInt(&ok,10));
 
@@ -2040,11 +2066,31 @@ void ScribbleArea::restoreSnapshot(QString snapshotFile)
 
                             //calling the drawline method
                             drawLineTo(endPixel,endPoint,false);
+*/
+                            QPointF lastPixel;
+                            QString lastpxx = element.attribute("lastPixelX");
+                            lastPixel.setX(lastpxx.toInt(&ok,10));
+                            QString lastpxy = element.attribute("lastPixelY");
+                            lastPixel.setY(lastpxy.toInt(&ok,10));
+
+                            QPointF currentPixel;
+                            QString currpxx = element.attribute("currentPixelX");
+                            currentPixel.setX(currpxx.toInt(&ok,10));
+                            QString currpxy = element.attribute("currentPixelY");
+                            currentPixel.setY(currpxy.toInt(&ok,10));
+
+                            qreal m11 = element.attribute("myTempViewM11").toFloat(&ok);
+                            qreal m22 = element.attribute("myTempViewM22").toFloat(&ok);
+                            qreal currentWidth = element.attribute("currentWidth").toFloat(&ok);
+
+                                        bufferImg->drawLine(lastPixel, currentPixel, QPen(QColor(element.attribute("currentColour")), currentWidth*m11, Qt::SolidLine, Qt::RoundCap,Qt::RoundJoin), QPainter::CompositionMode_SourceOver, ((element.attribute("antialiasing").toInt(&ok, 10))?true:false));
+			                int rad = qRound(  (currentWidth/2 + 2)* (qAbs(m11)+qAbs(m22)) );
+			                update(QRect(lastPixel.toPoint(), endPixel.toPoint()).normalized().adjusted(-rad, -rad, +rad, +rad));
                         }
-                        else if(toolMode == ScribbleArea::ERASER || toolMode == ScribbleArea::COLOURING)
+                        else if(toolMode == ScribbleArea::ERASER)
                         {
                             bool ok = true;
-                            QString lastpy = element.attribute("lastPixelY");
+/*                            QString lastpy = element.attribute("lastPixelY");
                             lastPixel.setY(lastpy.toInt(&ok,10));
 
                             //Grab lastPointX 
@@ -2082,6 +2128,86 @@ void ScribbleArea::restoreSnapshot(QString snapshotFile)
 
                             //calling the drawline method
                             drawLineTo(endPixel,endPoint,false);
+*/
+                            QPointF lastPixel;
+                            QString lastpxx = element.attribute("lastPixelX");
+                            lastPixel.setX(lastpxx.toInt(&ok,10));
+                            QString lastpxy = element.attribute("lastPixelY");
+                            lastPixel.setY(lastpxy.toInt(&ok,10));
+
+                            QPointF currentPixel;
+                            QString currpxx = element.attribute("currentPixelX");
+                            currentPixel.setX(currpxx.toInt(&ok,10));
+                            QString currpxy = element.attribute("currentPixelY");
+                            currentPixel.setY(currpxy.toInt(&ok,10));
+
+                            qreal m11 = element.attribute("myTempViewM11").toFloat(&ok);
+                            qreal currentWidth = element.attribute("currentWidth").toFloat(&ok);
+
+                                        bufferImg->drawLine(lastPixel, currentPixel, QPen(Qt::white, currentWidth, Qt::SolidLine, Qt::RoundCap,Qt::RoundJoin), QPainter::CompositionMode_SourceOver, ((element.attribute("antialiasing").toInt(&ok, 10))?true:false));
+			                int rad = qRound(  (currentWidth/2 + 2)*qAbs( m11 )  );
+			                update(QRect(lastPixel.toPoint(), endPixel.toPoint()).normalized().adjusted(-rad, -rad, +rad, +rad));
+                        }
+                        else if(toolMode == ScribbleArea::COLOURING)
+                        {
+                            bool ok = true;
+/*                            QString lastpy = element.attribute("lastPixelY");
+                            lastPixel.setY(lastpy.toInt(&ok,10));
+
+                            //Grab lastPointX 
+                            QString lastpx = element.attribute("lastPixelX");
+                            lastPixel.setX(lastpx.toInt(&ok,10));
+
+                            QString currpy = element.attribute("currentPixelY");
+                            currentPixel.setY(currpy.toInt(&ok,10));
+
+                            QString currpx = element.attribute("currentPixelX");
+                            currentPixel.setX(currpx.toInt(&ok,10));
+
+                            QString endpy = element.attribute("endPixelY");
+                            endPixel.setY(endpy.toInt(&ok,10));
+
+                            QString endpx = element.attribute("endPixelX");
+                            endPixel.setX(endpx.toInt(&ok,10));
+
+                            //Grab the current width
+                            QString width = element.attribute("currentWidth");
+                            currentWidth = width.toFloat (&ok);
+                
+                            //Grab antialiasing
+                            QString m11 = element.attribute("myTempViewM11");
+                            myTempView.setMatrix(m11.toFloat(&ok), myTempView.m12(), myTempView.m21(), myTempView.m22(), myTempView.dx(), myTempView.dy());
+                
+                            //Grab antialiasing
+                            QString antialias = element.attribute("antialiasing");
+                            int temp;
+                            temp = antialias.toInt (&ok,10);
+                            if(temp)
+                                antialiasing = true;        
+                            else
+                                antialiasing = false;
+
+                            //calling the drawline method
+                            drawLineTo(endPixel,endPoint,false);
+*/
+                            QPointF lastPixel;
+                            QString lastpxx = element.attribute("lastPixelX");
+                            lastPixel.setX(lastpxx.toInt(&ok,10));
+                            QString lastpxy = element.attribute("lastPixelY");
+                            lastPixel.setY(lastpxy.toInt(&ok,10));
+
+                            QPointF currentPixel;
+                            QString currpxx = element.attribute("currentPixelX");
+                            currentPixel.setX(currpxx.toInt(&ok,10));
+                            QString currpxy = element.attribute("currentPixelY");
+                            currentPixel.setY(currpxy.toInt(&ok,10));
+
+                            qreal m11 = element.attribute("myTempViewM11").toFloat(&ok);
+                            qreal currentWidth = element.attribute("currentWidth").toFloat(&ok);
+
+                            bufferImg->drawLine(lastPixel, currentPixel, QPen(Qt::gray, 1, Qt::DashLine, Qt::RoundCap,Qt::RoundJoin), QPainter::CompositionMode_SourceOver, ((element.attribute("antialiasing").toInt(&ok, 10))?true:false));
+			                int rad = qRound(   (currentWidth/2 + 2)*qAbs( m11 )   );
+			                update(QRect(lastPixel.toPoint(), endPixel.toPoint()).normalized().adjusted(-rad, -rad, +rad, +rad));
                         }
                     }
 				}
@@ -2253,7 +2379,7 @@ void ScribbleArea::drawLineTo(const QPointF &endPixel, const QPointF &endPoint, 
 	    newOperation.setAttribute("toolMode", toolMode);
 
 		if (toolMode == ScribbleArea::ERASER) {
-		       	newOperation.setAttribute("lastPixelX", QString("%1").arg(lastPixel.x()));
+		    newOperation.setAttribute("lastPixelX", QString("%1").arg(lastPixel.x()));
 			newOperation.setAttribute("lastPixelY", QString("%1").arg(lastPixel.y()));
 			newOperation.setAttribute("currentPixelX", QString("%1").arg(currentPixel.x()));
 			newOperation.setAttribute("currentPixelY", QString("%1").arg(currentPixel.y()));
@@ -2268,7 +2394,7 @@ void ScribbleArea::drawLineTo(const QPointF &endPixel, const QPointF &endPoint, 
 			update(QRect(lastPixel.toPoint(), endPixel.toPoint()).normalized().adjusted(-rad, -rad, +rad, +rad));
 		}
 		if(toolMode == ScribbleArea::PENCIL) {
-		       	newOperation.setAttribute("lastPixelX", QString("%1").arg(lastPixel.x()));
+		    newOperation.setAttribute("lastPixelX", QString("%1").arg(lastPixel.x()));
 			newOperation.setAttribute("lastPixelY", QString("%1").arg(lastPixel.y()));
 			newOperation.setAttribute("currentPixelX", QString("%1").arg(currentPixel.x()));
 			newOperation.setAttribute("currentPixelY", QString("%1").arg(currentPixel.y()));
@@ -2284,7 +2410,7 @@ void ScribbleArea::drawLineTo(const QPointF &endPixel, const QPointF &endPoint, 
 			update(QRect(lastPixel.toPoint(), endPixel.toPoint()).normalized().adjusted(-rad, -rad, +rad, +rad));
 		}
 		if(toolMode == ScribbleArea::PEN) {
-		       	newOperation.setAttribute("lastPixelX", QString("%1").arg(lastPixel.x()));
+		    newOperation.setAttribute("lastPixelX", QString("%1").arg(lastPixel.x()));
 			newOperation.setAttribute("lastPixelY", QString("%1").arg(lastPixel.y()));
 			newOperation.setAttribute("currentPixelX", QString("%1").arg(currentPixel.x()));
 			newOperation.setAttribute("currentPixelY", QString("%1").arg(currentPixel.y()));
@@ -2301,7 +2427,7 @@ void ScribbleArea::drawLineTo(const QPointF &endPixel, const QPointF &endPoint, 
 			update(QRect(lastPixel.toPoint(), endPixel.toPoint()).normalized().adjusted(-rad, -rad, +rad, +rad));
 		}
 		if(toolMode == ScribbleArea::COLOURING) {
-		       	newOperation.setAttribute("lastPixelX", QString("%1").arg(lastPixel.x()));
+		    newOperation.setAttribute("lastPixelX", QString("%1").arg(lastPixel.x()));
 			newOperation.setAttribute("lastPixelY", QString("%1").arg(lastPixel.y()));
 			newOperation.setAttribute("currentPixelX", QString("%1").arg(currentPixel.x()));
 			newOperation.setAttribute("currentPixelY", QString("%1").arg(currentPixel.y()));
