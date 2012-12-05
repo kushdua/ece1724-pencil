@@ -682,7 +682,7 @@ qDebug() << "mousePressEvent left button with toolMode " << toolMode << "\n";
         bool createdNew = false;
         QDomDocument doc;
 	    QString snapshotDir = editor->getSnapshotDir(); 
-	    QFile* file = new QFile(QString(snapshotDir + ((snapshotDir.endsWith("/")) ? "":"/") + "snapshotOperations%1.log").arg(editor->getSnapshotCount()));
+	    QFile* file = new QFile(QString(snapshotDir + ((snapshotDir.endsWith("/")) ? "":"/") + "snapshotOperations%1.log").arg(editor->getSnapshotCount()-1));
 
 	    if (!file->exists())
 	    {
@@ -1051,7 +1051,7 @@ void ScribbleArea::mouseReleaseEvent(QMouseEvent *event)
     bool createdNew = false;
     QDomDocument doc;
     QString snapshotDir = editor->getSnapshotDir(); 
-    QFile* file = new QFile(QString(snapshotDir + ((snapshotDir.endsWith("/")) ? "":"/") + "snapshotOperations%1.log").arg(editor->getSnapshotCount()));
+    QFile* file = new QFile(QString(snapshotDir + ((snapshotDir.endsWith("/")) ? "":"/") + "snapshotOperations%1.log").arg(editor->getSnapshotCount()-1));
 
     if (!file->exists())
     {
@@ -1996,7 +1996,7 @@ void ScribbleArea::drawLineTo(const QPointF &endPixel, const QPointF &endPoint, 
 
         QDomDocument doc;
 	QString snapshotDir = editor->getSnapshotDir(); 
-	QFile* file = new QFile(QString(snapshotDir + ((snapshotDir.endsWith("/")) ? "":"/") + "snapshotOperations%1.log").arg(editor->getSnapshotCount()));
+	QFile* file = new QFile(QString(snapshotDir + ((snapshotDir.endsWith("/")) ? "":"/") + "snapshotOperations%1.log").arg(editor->getSnapshotCount()-1));
 
 	if (!file->exists())
 	{

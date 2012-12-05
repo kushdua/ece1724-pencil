@@ -40,7 +40,7 @@ Editor::Editor(QMainWindow* parent)
 	savedName = "";
 
     //TODO: During restore inform user auto save will overwrite previous snapshots during normal program execution if they cancel restore
-    snapshotCount=0;
+    snapshotCount=1;
 	snapshotDir = QDir::currentPath() + "/snapshots/";
 	settings.setValue("snapshotDir", snapshotDir);
 	mainLogFilePath = snapshotDir + "snapshots.log";
@@ -207,8 +207,12 @@ Editor::Editor(QMainWindow* parent)
 	setAcceptDrops(true);
 
   //Restore first operations log file by default for now... if it exists! :o
-  openDocument("snapshots/snap0");
-  scribbleArea->restoreSnapshot("snapshots/snapshotOperations0.log");
+  QFile snapZero("snapshots/snap1");
+  if(snapZero.exists())
+  {
+    openDocument("snapshots/snap1");
+    scribbleArea->restoreSnapshot("snapshots/snapshotOperations1.log");
+  }
 }
 
 Editor::~Editor() {
@@ -250,7 +254,7 @@ void Editor::removeSnapshots() {
 	Timing *instance = Timing::getInstance();
 	instance->removeSnapshotDirTimer.start();
 
-	snapshotCount = 0;
+	snapshotCount = 1;
 	QString rmSnapshotCommand;
 
 	if (snapshotDir.endsWith("/"))
@@ -1034,7 +1038,7 @@ bool Editor::saveObject(QString filePath, bool snapshotSave)
 		newSnapshot.setAttribute("snapshotLogFile",
 				QString(
 						snapshotDir + ((snapshotDir.endsWith("/")) ? "" : "/")
-								+ "snapshotOperations%1.log").arg(snapshotCount));
+								+ "snapshotOperations%1.log").arg(snapshotCount-1));
 		root.appendChild(newSnapshot);
 
 		// Save changes
