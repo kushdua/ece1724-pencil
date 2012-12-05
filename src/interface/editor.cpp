@@ -206,8 +206,9 @@ Editor::Editor(QMainWindow* parent)
 	
 	setAcceptDrops(true);
 
-    //Restore first operations log file by default for now... if it exists! :o
-    scribbleArea->restoreSnapshot("snapshots/snapshotOperations0.log");
+  //Restore first operations log file by default for now... if it exists! :o
+  openDocument("snapshots/snap0");
+  scribbleArea->restoreSnapshot("snapshots/snapshotOperations0.log");
 }
 
 Editor::~Editor() {
@@ -278,12 +279,18 @@ void Editor::newDocument() {
 	}
 }
 
-void Editor::openDocument()
+void Editor::openDocument(QString fileName)
 {
-	if (maybeSave()) {
+	if (!fileName.isEmpty() || maybeSave()) {
 		QSettings settings("Pencil","Pencil");
-		QString myPath = settings.value("lastFilePath", QVariant(QDir::homePath())).toString();
-		QString fileName = QFileDialog::getOpenFileName(this, tr("Open File"), myPath);
+		bool deleteSnapshots = fileName.isEmpty();
+qDebug() << "About to open the snapshot file";
+		if(fileName.isEmpty())
+		{
+		  QString myPath = settings.value("lastFilePath", QVariant(QDir::homePath())).toString();
+		  fileName = QFileDialog::getOpenFileName(this, tr("Open File"), myPath);
+		}
+		
 		if (!fileName.isEmpty()) {
 			bool ok = openObject(fileName);
 			if(!ok) {
@@ -292,8 +299,11 @@ void Editor::openDocument()
 			}
 		}
 
-		//Remove all snapshots/logs
-		removeSnapshots();
+    if(deleteSnapshots)
+    {
+		  //Remove all snapshots/logs
+		  removeSnapshots();
+		}
 	}
 }
 

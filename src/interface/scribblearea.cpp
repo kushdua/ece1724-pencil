@@ -1721,13 +1721,13 @@ void ScribbleArea::drawBrush(QPointF thePoint, qreal brushWidth, qreal offset, Q
     
 //function call for testing purposes
 //scribbleArea.restoreSnapshot("/home/grad/workspace/ece1724-pencil/ece1724-pencil/snap/sample.xml");
-void ScribbleArea::restoreSnapshot(QString snapshotFile)
+void ScribbleArea::restoreSnapshot(QString operationSnapshotFile)
 {
-    qDebug() << "Time to restore the snapshot using logs in "<<snapshotFile;
-    QFileInfo fileInfo(snapshotFile);
+    qDebug() << "Time to restore the snapshot using logs in "<<operationSnapshotFile;
+    QFileInfo fileInfo(operationSnapshotFile);
 	if(fileInfo.isDir()) return;
     qDebug() << "Directory exists";
-	QFile* file = new QFile(snapshotFile);
+	QFile* file = new QFile(operationSnapshotFile);
 	if (!file->open(QFile::ReadOnly)) return;
     qDebug() << "File opened as read only";
 	QDomDocument doc;
@@ -1753,7 +1753,7 @@ void ScribbleArea::restoreSnapshot(QString snapshotFile)
 			QDomElement element = tag.toElement(); // try to convert the node to an element.
 			if(!element.isNull()) {
                 qDebug() << "Element tag name is " << element.tagName();
-				if(element.tagName() == "operation") {
+				if(element.tagName() == "operation" && element.attribute("opPosition")=="DRAWING") {
 					//loadDomElement(element, snapshotFile);
                     //following code to grap all the attributes and assign it the the variable in order 
 	                //Setting values such as lastPoint.setx()/setY(), etc according to what the drawLineTo needs for the layerType and operationType
@@ -1799,36 +1799,7 @@ void ScribbleArea::restoreSnapshot(QString snapshotFile)
 //                        qDebug() << "New layer type is " << layer->type << " INSIDE BITMAP";
                         if(toolmode.toInt(&ok, 10)==ScribbleArea::PENCIL || toolmode.toInt(&ok, 10)==ScribbleArea::PEN)//|| toolMode == ScribbleArea::PEN)
                         {
-/*                            //Grab lastPointY--commented out getting a weird error
-                            bool ok = true;
-                            QString lasty = element.attribute("lastPointY");
-                            lastPoint.setY(lasty.toInt(&ok,10));
-
-                            //Grab lastPointX 
-                            QString lastx = element.attribute("lastPointX");
-                            lastPoint.setX(lastx.toInt(&ok,10));
-
-                            //Grab the current width
-                            QString width = element.attribute("currentWidth");
-                            currentWidth = width.toFloat (&ok);
-
-                            //Grab the current color
-                            //QColor color(element.attribute("currentColour"));
-                            currentColour.setNamedColor(element.attribute("currentColour"));
-                
-                            //Grab antialiasing
-                            QString antialias = element.attribute("antialiasing");
-                            int temp;
-                            temp = antialias.toInt (&ok,10);
-                            if(temp)
-                                antialiasing = true;        
-                            else
-                                antialiasing = false;
-
-                            //calling the drawline method
-                            drawLineTo(endPixel,endPoint,false);
-*/
-                    		bool ok = true;
+                    		    bool ok = true;
 
                             QPointF lastPoint;
                             QString lastptx = element.attribute("lastPointX");
@@ -1838,38 +1809,16 @@ void ScribbleArea::restoreSnapshot(QString snapshotFile)
 
                             qreal currentwidth = element.attribute("currentWidth").toFloat(&ok);
 
-			                QPen pen2 = QPen ( QBrush(QColor(element.attribute("currentColour"))), currentwidth, Qt::SolidLine, Qt::RoundCap, Qt::RoundJoin );
-			                bufferImg->drawLine(lastPoint, endPoint, pen2, QPainter::CompositionMode_SourceOver, ((element.attribute("antialiasing").toInt(&ok, 10))?true:false));
-			                int rad = qRound(currentwidth / 2) + 3;
-			                update(myTempView.mapRect(QRect(lastPoint.toPoint(), endPoint.toPoint()).normalized().adjusted(-rad, -rad, +rad, +rad)));
+			                      QPen pen2 = QPen ( QBrush(QColor(element.attribute("currentColour"))), currentwidth, Qt::SolidLine, Qt::RoundCap, Qt::RoundJoin );
+			                      bufferImg->drawLine(lastPoint, endPoint, pen2, QPainter::CompositionMode_SourceOver, ((element.attribute("antialiasing").toInt(&ok, 10))?true:false));
+			                      int rad = qRound(currentwidth / 2) + 3;
+			                      update(myTempView.mapRect(QRect(lastPoint.toPoint(), endPoint.toPoint()).normalized().adjusted(-rad, -rad, +rad, +rad)));
                         }
-                        else if(toolMode == ScribbleArea::ERASER)
+                        else if(toolmode.toInt(&ok, 10) == ScribbleArea::ERASER)
                         {
+qDebug()<<"Processing eraser operation";
                             //Grab lastPointY--commented out getting a weird error
                             bool ok = true;
-/*                            QString lasty = element.attribute("lastPointY");
-                            lastPoint.setY(lasty.toInt(&ok,10));
-
-                            //Grab lastPointX 
-                            QString lastx = element.attribute("lastPointX");
-                            lastPoint.setX(lastx.toInt(&ok,10));
-
-                            //Grab the current width
-                            QString width = element.attribute("currentWidth");
-                            currentWidth = width.toFloat (&ok);
-                
-                            //Grab antialiasing
-                            QString antialias = element.attribute("antialiasing");
-                            int temp;
-                            temp = antialias.toInt (&ok,10);
-                            if(temp)
-                                antialiasing = true;        
-                            else
-                                antialiasing = false;
-
-                            //calling the drawline method
-                            drawLineTo(endPixel,endPoint,false);
-*/
                             QPointF lastPoint;
                             QString lastptx = element.attribute("lastPointX");
                             lastPoint.setX(lastptx.toInt(&ok,10));
@@ -1878,39 +1827,17 @@ void ScribbleArea::restoreSnapshot(QString snapshotFile)
 
                             qreal currentwidth = element.attribute("currentWidth").toFloat(&ok);
 
-			                QPen pen2 = QPen ( QBrush(QColor(255,255,255,255)), currentwidth, Qt::SolidLine, Qt::RoundCap, Qt::RoundJoin );
-			                bufferImg->drawLine(lastPoint, endPoint, pen2, QPainter::CompositionMode_SourceOver, ((element.attribute("antialiasing").toInt(&ok, 10))?true:false));
-			                int rad = qRound(currentwidth / 2) + 2;
-			                update(myTempView.mapRect(QRect(lastPoint.toPoint(), endPoint.toPoint()).normalized().adjusted(-rad, -rad, +rad, +rad)));
+			                      QPen pen2 = QPen ( QBrush(QColor(255,255,255,255)), currentwidth, Qt::SolidLine, Qt::RoundCap, Qt::RoundJoin );
+			                      bufferImg->drawLine(lastPoint, endPoint, pen2, QPainter::CompositionMode_SourceOver, ((element.attribute("antialiasing").toInt(&ok, 10))?true:false));
+			                      int rad = qRound(currentwidth / 2) + 2;
+			                      update(myTempView.mapRect(QRect(lastPoint.toPoint(), endPoint.toPoint()).normalized().adjusted(-rad, -rad, +rad, +rad)));
+qDebug()<<"Processed eraser operation";
                         }
-                        else if(toolMode == ScribbleArea::COLOURING)
+                        else if(toolmode.toInt(&ok, 10) == ScribbleArea::COLOURING)
                         {
 
                             //Grab lastPointY--commented out getting a weird error
                             bool ok = true;
-/*                            QString prop = element.attribute("brushWidth");
-                            brush.width = prop.toFloat(&ok);
-                            prop = element.attribute("brushFeather");
-                            brush.feather = prop.toFloat(&ok);
-                            prop = element.attribute("tabletPressure");
-                            tabletPressure = prop.toFloat(&ok);
-                            prop = element.attribute("tabletInUse");
-                            tabletInUse = (prop == "TRUE") ? true:false;
-                            prop = element.attribute("usePressure");
-                            usePressure = (prop == "TRUE") ? true:false;
-
-                            QString lasty = element.attribute("lastPointY");
-                            lastPoint.setY(lasty.toInt(&ok,10));
-
-                            //Grab lastPointX 
-                            QString lastx = element.attribute("lastPointX");
-                            lastPoint.setX(lastx.toInt(&ok,10));
-                
-                            brush.colour.setNamedColor(element.attribute("brushColour"));
-
-                            //calling the drawline method
-                            drawLineTo(endPixel,endPoint,false);
-*/
                             QPointF lastPoint;
                             QString lastptx = element.attribute("lastPointX");
                             lastPoint.setX(lastptx.toInt(&ok,10));
@@ -1959,51 +1886,9 @@ void ScribbleArea::restoreSnapshot(QString snapshotFile)
                         QString endpty = element.attribute("endPointY");
                         endPoint.setY(endpty.toInt(&ok,10));
 //                        qDebug() << "New layer type is " << layer->type << " INSIDE VECTOR";
-                        if(toolMode == ScribbleArea::PENCIL)
+                        if(toolmode.toInt(&ok, 10) == ScribbleArea::PENCIL)
                         {
                             bool ok = true;
-/*                            QString lastpy = element.attribute("lastPixelY");
-                            lastPixel.setY(lastpy.toInt(&ok,10));
-
-                            //Grab lastPointX 
-                            QString lastpx = element.attribute("lastPixelX");
-                            lastPixel.setX(lastpx.toInt(&ok,10));
-
-                            QString currpy = element.attribute("currentPixelY");
-                            currentPixel.setY(currpy.toInt(&ok,10));
-
-                            QString currpx = element.attribute("currentPixelX");
-                            currentPixel.setX(currpx.toInt(&ok,10));
-
-                            QString endpy = element.attribute("endPixelY");
-                            endPixel.setY(endpy.toInt(&ok,10));
-
-                            QString endpx = element.attribute("endPixelX");
-                            endPixel.setX(endpx.toInt(&ok,10));
-
-                            //Grab the current width
-                            QString width = element.attribute("currentWidth");
-                            currentWidth = width.toFloat (&ok);
-
-                            //Grab the current color
-                            currentColour.setNamedColor(element.attribute("currentColour"));
-                
-                            //Grab antialiasing
-                            QString m11 = element.attribute("myTempViewM11");
-                            myTempView.setMatrix(m11.toFloat(&ok), myTempView.m12(), myTempView.m21(), myTempView.m22(), myTempView.dx(), myTempView.dy());
-                
-                            //Grab antialiasing
-                            QString antialias = element.attribute("antialiasing");
-                            int temp;
-                            temp = antialias.toInt (&ok,10);
-                            if(temp)
-                                antialiasing = true;        
-                            else
-                                antialiasing = false;
-
-                            //calling the drawline method
-                            drawLineTo(endPixel,endPoint,false);
-*/
 
                             QPointF lastPixel;
                             QString lastpxx = element.attribute("lastPixelX");
@@ -2021,52 +1906,9 @@ void ScribbleArea::restoreSnapshot(QString snapshotFile)
 			                int rad = qRound(  ( element.attribute("currentWidth").toFloat(&ok)/2 + 2)*qAbs( element.attribute("antialiasing").toFloat(&ok) )  );
 			                update(QRect(lastPixel.toPoint(), endPixel.toPoint()).normalized().adjusted(-rad, -rad, +rad, +rad));
                         }
-                        else if(toolMode == ScribbleArea::PEN)
+                        else if(toolmode.toInt(&ok, 10) == ScribbleArea::PEN)
                         {
-/*                            bool ok = true;
-                            QString lastpy = element.attribute("lastPixelY");
-                            lastPixel.setY(lastpy.toInt(&ok,10));
-
-                            //Grab lastPointX 
-                            QString lastpx = element.attribute("lastPixelX");
-                            lastPixel.setX(lastpx.toInt(&ok,10));
-
-                            QString currpy = element.attribute("currentPixelY");
-                            currentPixel.setY(currpy.toInt(&ok,10));
-
-                            QString currpx = element.attribute("currentPixelX");
-                            currentPixel.setX(currpx.toInt(&ok,10));
-
-                            QString endpy = element.attribute("endPixelY");
-                            endPixel.setY(endpy.toInt(&ok,10));
-
-                            QString endpx = element.attribute("endPixelX");
-                            endPixel.setX(endpx.toInt(&ok,10));
-
-                            //Grab the current width
-                            QString width = element.attribute("currentWidth");
-                            currentWidth = width.toFloat (&ok);
-
-                            //Grab the current color
-                            pen.colour.setNamedColor(element.attribute("penColour"));
-                
-                            //Grab antialiasing
-                            QString m11 = element.attribute("myTempViewM11");
-                            QString m22 = element.attribute("myTempViewM22");
-                            myTempView.setMatrix(m11.toFloat(&ok), myTempView.m12(), myTempView.m21(), m22.toFloat(&ok), myTempView.dx(), myTempView.dy());
-                
-                            //Grab antialiasing
-                            QString antialias = element.attribute("antialiasing");
-                            int temp;
-                            temp = antialias.toInt (&ok,10);
-                            if(temp)
-                                antialiasing = true;        
-                            else
-                                antialiasing = false;
-
-                            //calling the drawline method
-                            drawLineTo(endPixel,endPoint,false);
-*/
+                            bool ok = true;
                             QPointF lastPixel;
                             QString lastpxx = element.attribute("lastPixelX");
                             lastPixel.setX(lastpxx.toInt(&ok,10));
@@ -2087,48 +1929,9 @@ void ScribbleArea::restoreSnapshot(QString snapshotFile)
 			                int rad = qRound(  (currentWidth/2 + 2)* (qAbs(m11)+qAbs(m22)) );
 			                update(QRect(lastPixel.toPoint(), endPixel.toPoint()).normalized().adjusted(-rad, -rad, +rad, +rad));
                         }
-                        else if(toolMode == ScribbleArea::ERASER)
+                        else if(toolmode.toInt(&ok, 10) == ScribbleArea::ERASER)
                         {
                             bool ok = true;
-/*                            QString lastpy = element.attribute("lastPixelY");
-                            lastPixel.setY(lastpy.toInt(&ok,10));
-
-                            //Grab lastPointX 
-                            QString lastpx = element.attribute("lastPixelX");
-                            lastPixel.setX(lastpx.toInt(&ok,10));
-
-                            QString currpy = element.attribute("currentPixelY");
-                            currentPixel.setY(currpy.toInt(&ok,10));
-
-                            QString currpx = element.attribute("currentPixelX");
-                            currentPixel.setX(currpx.toInt(&ok,10));
-
-                            QString endpy = element.attribute("endPixelY");
-                            endPixel.setY(endpy.toInt(&ok,10));
-
-                            QString endpx = element.attribute("endPixelX");
-                            endPixel.setX(endpx.toInt(&ok,10));
-
-                            //Grab the current width
-                            QString width = element.attribute("currentWidth");
-                            currentWidth = width.toFloat (&ok);
-                
-                            //Grab antialiasing
-                            QString m11 = element.attribute("myTempViewM11");
-                            myTempView.setMatrix(m11.toFloat(&ok), myTempView.m12(), myTempView.m21(), myTempView.m22(), myTempView.dx(), myTempView.dy());
-                
-                            //Grab antialiasing
-                            QString antialias = element.attribute("antialiasing");
-                            int temp;
-                            temp = antialias.toInt (&ok,10);
-                            if(temp)
-                                antialiasing = true;        
-                            else
-                                antialiasing = false;
-
-                            //calling the drawline method
-                            drawLineTo(endPixel,endPoint,false);
-*/
                             QPointF lastPixel;
                             QString lastpxx = element.attribute("lastPixelX");
                             lastPixel.setX(lastpxx.toInt(&ok,10));
@@ -2148,48 +1951,9 @@ void ScribbleArea::restoreSnapshot(QString snapshotFile)
 			                int rad = qRound(  (currentWidth/2 + 2)*qAbs( m11 )  );
 			                update(QRect(lastPixel.toPoint(), endPixel.toPoint()).normalized().adjusted(-rad, -rad, +rad, +rad));
                         }
-                        else if(toolMode == ScribbleArea::COLOURING)
+                        else if(toolmode.toInt(&ok, 10) == ScribbleArea::COLOURING)
                         {
                             bool ok = true;
-/*                            QString lastpy = element.attribute("lastPixelY");
-                            lastPixel.setY(lastpy.toInt(&ok,10));
-
-                            //Grab lastPointX 
-                            QString lastpx = element.attribute("lastPixelX");
-                            lastPixel.setX(lastpx.toInt(&ok,10));
-
-                            QString currpy = element.attribute("currentPixelY");
-                            currentPixel.setY(currpy.toInt(&ok,10));
-
-                            QString currpx = element.attribute("currentPixelX");
-                            currentPixel.setX(currpx.toInt(&ok,10));
-
-                            QString endpy = element.attribute("endPixelY");
-                            endPixel.setY(endpy.toInt(&ok,10));
-
-                            QString endpx = element.attribute("endPixelX");
-                            endPixel.setX(endpx.toInt(&ok,10));
-
-                            //Grab the current width
-                            QString width = element.attribute("currentWidth");
-                            currentWidth = width.toFloat (&ok);
-                
-                            //Grab antialiasing
-                            QString m11 = element.attribute("myTempViewM11");
-                            myTempView.setMatrix(m11.toFloat(&ok), myTempView.m12(), myTempView.m21(), myTempView.m22(), myTempView.dx(), myTempView.dy());
-                
-                            //Grab antialiasing
-                            QString antialias = element.attribute("antialiasing");
-                            int temp;
-                            temp = antialias.toInt (&ok,10);
-                            if(temp)
-                                antialiasing = true;        
-                            else
-                                antialiasing = false;
-
-                            //calling the drawline method
-                            drawLineTo(endPixel,endPoint,false);
-*/
                             QPointF lastPixel;
                             QString lastpxx = element.attribute("lastPixelX");
                             lastPixel.setX(lastpxx.toInt(&ok,10));
@@ -2217,7 +1981,7 @@ void ScribbleArea::restoreSnapshot(QString snapshotFile)
             //tag = tag.nextSiblingElement();
 	} 
     qDebug() << "while loop exited";
-
+  file->close();
 
 }
 

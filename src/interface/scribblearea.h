@@ -73,7 +73,7 @@ public:
 	void setColour(const int);
 	void setColour(const QColor);
 	void resetColours();
-    void restoreSnapshot(QString snapshotFile);
+  void restoreSnapshot(QString operationSnapshotFile);
 	void deleteSelection();
 	void setSelection(QRectF rect, bool);
 	void displaySelectionProperties();

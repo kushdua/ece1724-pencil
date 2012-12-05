@@ -216,7 +216,7 @@ public slots:
 	
 private slots:
 	void newDocument();
-	void openDocument();
+	void openDocument(QString fileName="");
 	bool saveDocument();
 	void saveForce();
 	bool exportX();
