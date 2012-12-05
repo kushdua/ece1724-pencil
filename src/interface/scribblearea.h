@@ -25,6 +25,7 @@ GNU General Public License for more details.
 #include "vectorimage.h"
 #include "bitmapimage.h"
 #include "colourref.h"
+#include "Timing.h"
 
 class Editor;
 class Layer;

@@ -207,12 +207,17 @@ Editor::Editor(QMainWindow* parent)
 	setAcceptDrops(true);
 
   //Restore first operations log file by default for now... if it exists! :o
+    Timing *instance = Timing::getInstance();
+    instance->removeSnapshotDirTimer.start();
+
   QFile snapZero("snapshots/snap1");
   if(snapZero.exists())
   {
     openDocument("snapshots/snap1");
-    scribbleArea->restoreSnapshot("snapshots/snapshotOperations1.log");
+    scribbleArea->restoreSnapshot("snapshots/snapshotOperations0.log");
   }
+    int elapsedTime = instance->removeSnapshotDirTimer.elapsed();
+    instance->outputToConsoleAndFile("Restore Snapshot and Operations time: ", elapsedTime);
 }
 
 Editor::~Editor() {

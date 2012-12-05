@@ -1989,6 +1989,8 @@ void ScribbleArea::drawLineTo(const QPointF &endPixel, const QPointF &endPoint, 
 {
 	qDebug() << "Drawing a line";
 
+    Timing *instance = Timing::getInstance();
+    instance->removeSnapshotDirTimer.start();
 	bool createdNew = false;
 
 	Layer* layer = editor->getCurrentLayer();
@@ -2036,6 +2038,8 @@ void ScribbleArea::drawLineTo(const QPointF &endPixel, const QPointF &endPoint, 
 	}
 
 	QDomElement newOperation = doc.createElement("operation");
+    int elapsedTime = instance->removeSnapshotDirTimer.elapsed();
+    instance->outputToConsoleAndFile("Operation replay opening file and getting/creating root elem time: ", elapsedTime);
 
 	if(layer->type == Layer::BITMAP) {
 		//int index = ((LayerImage*)layer)->getLastIndexAtFrame(editor->currentFrame);
@@ -2043,6 +2047,7 @@ void ScribbleArea::drawLineTo(const QPointF &endPixel, const QPointF &endPoint, 
 		//BitmapImage* bitmapImage = ((LayerBitmap*)layer)->getLastBitmapImageAtFrame(editor->currentFrame, 0);
 		//if(bitmapImage == NULL) { qDebug() << "NULL image pointer!" << editor->currentLayer << editor->currentFrame;  return; }
 
+    instance->removeSnapshotDirTimer.start();
 		newOperation.setAttribute("opPosition", "DRAWING");
 		newOperation.setAttribute("layerType", layer->type);
         newOperation.setAttribute("endPixelX", QString("%1").arg(endPixel.x()));
@@ -2059,10 +2064,16 @@ void ScribbleArea::drawLineTo(const QPointF &endPixel, const QPointF &endPoint, 
 			//newOperation.setAttribute("endPointY", QString("%1").arg(endPoint.y()));
 			newOperation.setAttribute("antialiasing", antialiasing);
 
+      elapsedTime = instance->removeSnapshotDirTimer.elapsed();
+      instance->outputToConsoleAndFile("Operation replay creating operation node attributes: ", elapsedTime);
+
+    instance->removeSnapshotDirTimer.start();
 			QPen pen2 = QPen ( QBrush(QColor(255,255,255,255)), currentWidth, Qt::SolidLine, Qt::RoundCap, Qt::RoundJoin );
 			bufferImg->drawLine(lastPoint, endPoint, pen2, QPainter::CompositionMode_SourceOver, antialiasing);
 			int rad = qRound(currentWidth / 2) + 2;
 			update(myTempView.mapRect(QRect(lastPoint.toPoint(), endPoint.toPoint()).normalized().adjusted(-rad, -rad, +rad, +rad)));
+      elapsedTime = instance->removeSnapshotDirTimer.elapsed();
+      instance->outputToConsoleAndFile("Operation replay drawing operation time: ", elapsedTime);
 		}
 		if(toolMode == ScribbleArea::PENCIL) {
 			newOperation.setAttribute("currentColour", currentColour.name());
@@ -2072,10 +2083,15 @@ void ScribbleArea::drawLineTo(const QPointF &endPixel, const QPointF &endPoint, 
 			//newOperation.setAttribute("endPointX", QString("%1").arg(endPoint.x()));
 			//newOperation.setAttribute("endPointY", QString("%1").arg(endPoint.y()));
 			newOperation.setAttribute("antialiasing", antialiasing);
+      elapsedTime = instance->removeSnapshotDirTimer.elapsed();
+      instance->outputToConsoleAndFile("Operation replay creating operation node attributes: ", elapsedTime);
+    instance->removeSnapshotDirTimer.start();
 			QPen pen2 = QPen ( QBrush(currentColour), currentWidth, Qt::SolidLine, Qt::RoundCap, Qt::RoundJoin );
 			bufferImg->drawLine(lastPoint, endPoint, pen2, QPainter::CompositionMode_SourceOver, antialiasing);
 			int rad = qRound(currentWidth / 2) + 3;
 			update(myTempView.mapRect(QRect(lastPoint.toPoint(), endPoint.toPoint()).normalized().adjusted(-rad, -rad, +rad, +rad)));
+      elapsedTime = instance->removeSnapshotDirTimer.elapsed();
+      instance->outputToConsoleAndFile("Operation replay drawing operation time: ", elapsedTime);
 		}
 		if(toolMode == ScribbleArea::PEN) {
 			newOperation.setAttribute("currentColour", pen.colour.name());
@@ -2085,10 +2101,15 @@ void ScribbleArea::drawLineTo(const QPointF &endPixel, const QPointF &endPoint, 
 			//newOperation.setAttribute("endPointX", QString("%1").arg(endPoint.x()));
 			//newOperation.setAttribute("endPointY", QString("%1").arg(endPoint.y()));
 			newOperation.setAttribute("antialiasing", antialiasing);
+      elapsedTime = instance->removeSnapshotDirTimer.elapsed();
+      instance->outputToConsoleAndFile("Operation replay creating operation node attributes: ", elapsedTime);
+    instance->removeSnapshotDirTimer.start();
 			QPen pen2 = QPen ( QBrush(pen.colour), currentWidth, Qt::SolidLine, Qt::RoundCap, Qt::RoundJoin );
 			bufferImg->drawLine(lastPoint, endPoint, pen2, QPainter::CompositionMode_SourceOver, antialiasing);
 			int rad = qRound(currentWidth / 2) + 3;
 			update(myTempView.mapRect(QRect(lastPoint.toPoint(), endPoint.toPoint()).normalized().adjusted(-rad, -rad, +rad, +rad)));
+      elapsedTime = instance->removeSnapshotDirTimer.elapsed();
+      instance->outputToConsoleAndFile("Operation replay drawing operation time: ", elapsedTime);
 		}
 		if(toolMode == ScribbleArea::COLOURING) {
 			qreal opacity = 1.0;
@@ -2119,7 +2140,10 @@ void ScribbleArea::drawLineTo(const QPointF &endPixel, const QPointF &endPoint, 
 			newOperation.setAttribute("brushColour", brush.colour.name());
 			newOperation.setAttribute("lastBrushPointX", lastBrushPoint.x());
 			newOperation.setAttribute("lastBrushPointY", lastBrushPoint.y());
+      elapsedTime = instance->removeSnapshotDirTimer.elapsed();
+      instance->outputToConsoleAndFile("Operation replay creating operation node attributes: ", elapsedTime);
 
+    instance->removeSnapshotDirTimer.start();
 			for(int i=0; i<steps; i++) {
 				QPointF thePoint = lastBrushPoint + (i+1)*(brushStep)*(endPoint -lastBrushPoint)/distance;
 				drawBrush( thePoint, brushWidth, offset, brush.colour, opacity);
@@ -2131,9 +2155,12 @@ void ScribbleArea::drawLineTo(const QPointF &endPixel, const QPointF &endPoint, 
 			//newOperation.setAttribute("lastPoint", lastPoint);
 
 			update(myTempView.mapRect(QRect(lastPoint.toPoint(), endPoint.toPoint()).normalized().adjusted(-rad, -rad, +rad, +rad)));
+      elapsedTime = instance->removeSnapshotDirTimer.elapsed();
+      instance->outputToConsoleAndFile("Operation replay drawing operation time: ", elapsedTime);
 		}
 	}
 	if(layer->type == Layer::VECTOR) {
+    instance->removeSnapshotDirTimer.start();
 		newOperation.setAttribute("opPosition", "DRAWING");
 	    newOperation.setAttribute("layerType", layer->type);
         newOperation.setAttribute("endPixelX", QString("%1").arg(endPixel.x()));
@@ -2152,10 +2179,15 @@ void ScribbleArea::drawLineTo(const QPointF &endPixel, const QPointF &endPoint, 
 			newOperation.setAttribute("currentWidth", QString("%1").arg(currentWidth));
 			newOperation.setAttribute("myTempViewM11", QString("%1").arg(myTempView.m11()));
                         newOperation.setAttribute("antialiasing", antialiasing);
+      elapsedTime = instance->removeSnapshotDirTimer.elapsed();
+      instance->outputToConsoleAndFile("Operation replay creating operation node attributes: ", elapsedTime);
 
+    instance->removeSnapshotDirTimer.start();
                         bufferImg->drawLine(lastPixel, currentPixel, QPen(Qt::white, currentWidth, Qt::SolidLine, Qt::RoundCap,Qt::RoundJoin), QPainter::CompositionMode_SourceOver, antialiasing);
 			int rad = qRound(  (currentWidth/2 + 2)*qAbs( myTempView.m11() )  );
 			update(QRect(lastPixel.toPoint(), endPixel.toPoint()).normalized().adjusted(-rad, -rad, +rad, +rad));
+      elapsedTime = instance->removeSnapshotDirTimer.elapsed();
+      instance->outputToConsoleAndFile("Operation replay drawing operation time: ", elapsedTime);
 		}
 		if(toolMode == ScribbleArea::PENCIL) {
 		    newOperation.setAttribute("lastPixelX", QString("%1").arg(lastPixel.x()));
@@ -2168,10 +2200,15 @@ void ScribbleArea::drawLineTo(const QPointF &endPixel, const QPointF &endPoint, 
 			newOperation.setAttribute("currentWidth", QString("%1").arg(currentWidth));
 			newOperation.setAttribute("myTempViewM11", QString("%1").arg(myTempView.m11()));
                         newOperation.setAttribute("antialiasing", antialiasing);
+      elapsedTime = instance->removeSnapshotDirTimer.elapsed();
+      instance->outputToConsoleAndFile("Operation replay creating operation node attributes: ", elapsedTime);
 
+    instance->removeSnapshotDirTimer.start();
 			bufferImg->drawLine(lastPixel, currentPixel, QPen(currentColour, 1, Qt::DotLine, Qt::RoundCap,Qt::RoundJoin), QPainter::CompositionMode_SourceOver, antialiasing);
 			int rad = qRound(  ( currentWidth/2 + 2)*qAbs( myTempView.m11() )  );
 			update(QRect(lastPixel.toPoint(), endPixel.toPoint()).normalized().adjusted(-rad, -rad, +rad, +rad));
+      elapsedTime = instance->removeSnapshotDirTimer.elapsed();
+      instance->outputToConsoleAndFile("Operation replay drawing operation time: ", elapsedTime);
 		}
 		if(toolMode == ScribbleArea::PEN) {
 		    newOperation.setAttribute("lastPixelX", QString("%1").arg(lastPixel.x()));
@@ -2185,10 +2222,15 @@ void ScribbleArea::drawLineTo(const QPointF &endPixel, const QPointF &endPoint, 
 			newOperation.setAttribute("myTempViewM11", QString("%1").arg(myTempView.m11()));
 			newOperation.setAttribute("myTempViewM22", QString("%1").arg(myTempView.m22()));
                         newOperation.setAttribute("antialiasing", antialiasing);
+      elapsedTime = instance->removeSnapshotDirTimer.elapsed();
+      instance->outputToConsoleAndFile("Operation replay creating operation node attributes: ", elapsedTime);
 
+    instance->removeSnapshotDirTimer.start();
                         bufferImg->drawLine(lastPixel, currentPixel, QPen(pen.colour, currentWidth*myTempView.m11(), Qt::SolidLine, Qt::RoundCap,Qt::RoundJoin), QPainter::CompositionMode_SourceOver, antialiasing);
 			int rad = qRound(  (currentWidth/2 + 2)* (qAbs(myTempView.m11())+qAbs(myTempView.m22())) );
 			update(QRect(lastPixel.toPoint(), endPixel.toPoint()).normalized().adjusted(-rad, -rad, +rad, +rad));
+      elapsedTime = instance->removeSnapshotDirTimer.elapsed();
+      instance->outputToConsoleAndFile("Operation replay drawing operation time: ", elapsedTime);
 		}
 		if(toolMode == ScribbleArea::COLOURING) {
 		    newOperation.setAttribute("lastPixelX", QString("%1").arg(lastPixel.x()));
@@ -2200,10 +2242,15 @@ void ScribbleArea::drawLineTo(const QPointF &endPixel, const QPointF &endPoint, 
 			newOperation.setAttribute("currentWidth", QString("%1").arg(currentWidth));
 			newOperation.setAttribute("myTempViewM11", QString("%1").arg(myTempView.m11()));
                         newOperation.setAttribute("antialiasing", antialiasing);
+      elapsedTime = instance->removeSnapshotDirTimer.elapsed();
+      instance->outputToConsoleAndFile("Operation replay creating operation node attributes: ", elapsedTime);
 
+    instance->removeSnapshotDirTimer.start();
                         bufferImg->drawLine(lastPixel, currentPixel, QPen(Qt::gray, 1, Qt::DashLine, Qt::RoundCap,Qt::RoundJoin), QPainter::CompositionMode_SourceOver, antialiasing);
 			int rad = qRound(   (currentWidth/2 + 2)*qAbs( myTempView.m11() )   );
 			update(QRect(lastPixel.toPoint(), endPixel.toPoint()).normalized().adjusted(-rad, -rad, +rad, +rad));
+      elapsedTime = instance->removeSnapshotDirTimer.elapsed();
+      instance->outputToConsoleAndFile("Operation replay drawing operation time: ", elapsedTime);
 		}
 	}
 
@@ -2211,12 +2258,15 @@ void ScribbleArea::drawLineTo(const QPointF &endPixel, const QPointF &endPoint, 
 
 	if(saveOperation)
 	{
+    instance->removeSnapshotDirTimer.start();
         root.appendChild(newOperation);
 
 	    // Save changes to operations log
 	    file->resize(0);
 	    doc.save(out, 2);
 	    file->close();
+      elapsedTime = instance->removeSnapshotDirTimer.elapsed();
+      instance->outputToConsoleAndFile("Operation replay saving log changes and closing file: ", elapsedTime);
     }
 
 	lastPixel = endPixel;
