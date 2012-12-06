@@ -16,6 +16,7 @@ GNU General Public License for more details.
 #include <QtGui>
 #include <math.h>
 #include "scribblearea.h"
+#include <assert.h>
 #include "beziercurve.h"
 #include "editor.h"
 #include "layerbitmap.h"
@@ -75,6 +76,9 @@ ScribbleArea::ScribbleArea(QWidget *parent, Editor* editor)
 	pen.colour = Qt::black;
 	brush.colour = Qt::blue;
 	currentColour = pencil.colour;
+
+    //uncomment the below -- for buggy code
+    //assertfail=0;
 	
 	pencil.colourNumber = 0;
 	pen.colourNumber = 0;
@@ -1284,6 +1288,11 @@ void ScribbleArea::mouseReleaseEvent(QMouseEvent *event)
  	file->resize(0);
  	doc.save(out, 2);
  	file->close();
+
+    //buggy code need to uncomment 2 lines of code below
+    //assertfail+=1;
+    //assert(assertfail<7);
+
 }
 
 void ScribbleArea::mouseDoubleClickEvent(QMouseEvent *event)
@@ -1297,6 +1306,9 @@ void ScribbleArea::mouseDoubleClickEvent(QMouseEvent *event)
 			mousePressEvent(event);
 		}
 	}
+    //uncomment the below code -- buggy thingy
+    //assert(false);
+
 }
 
 void ScribbleArea::paintBitmapBuffer() {

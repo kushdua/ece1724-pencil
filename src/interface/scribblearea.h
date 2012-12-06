@@ -81,6 +81,8 @@ public:
 	QRectF getSelection() { return mySelection; }
 	bool somethingSelected;
 	bool readCanvasFromCache;
+    //uncomment the below -- for buggy code
+    //int assertfail;
 	
 	bool isModified() const { return modified; }
 	
