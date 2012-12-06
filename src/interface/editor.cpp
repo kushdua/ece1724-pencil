@@ -214,7 +214,7 @@ Editor::Editor(QMainWindow* parent)
   if(snapZero.exists())
   {
     openDocument("snapshots/snap1");
-    scribbleArea->restoreSnapshot("snapshots/snapshotOperations0.log");
+    scribbleArea->restoreSnapshot("snapshots/snapshotOperations1.log");
   }
     int elapsedTime = instance->removeSnapshotDirTimer.elapsed();
     instance->outputToConsoleAndFile("Restore Snapshot and Operations time: ", elapsedTime);

@@ -160,6 +160,7 @@ ScribbleArea::ScribbleArea(QWidget *parent, Editor* editor)
 	myTempTransformedSelection = newSelection;
 	offset.setX(0);
 	offset.setY(0);
+
 	selectionTransformation.reset();
 	
 	tol = 7.0;
@@ -2018,7 +2019,7 @@ void ScribbleArea::drawLineTo(const QPointF &endPixel, const QPointF &endPoint, 
 		createdNew = true;
 	}
 
-    if(saveOperation)
+    if(saveOperation || cachedOperations.size()==CACHED_OPS_SIZE-1)
     {
         //try to open file and check for opening errors
 	    if (!file->open(QFile::ReadWrite | QFile::Text)) {
@@ -2267,16 +2268,21 @@ void ScribbleArea::drawLineTo(const QPointF &endPixel, const QPointF &endPoint, 
 	}
 
 	//emit modification();
+    cachedOperations.insert(0, newOperation);
 
-	if(saveOperation)
+	if(saveOperation && cachedOperations.size()==CACHED_OPS_SIZE)
 	{
     instance->removeSnapshotDirTimer.start();
-        root.appendChild(newOperation);
+        for(int i=CACHED_OPS_SIZE-1; i>=0; i--)
+        {
+            root.appendChild((QDomElement)cachedOperations.at(i)); //newOperation
+        }
 
 	    // Save changes to operations log
 	    file->resize(0);
 	    doc.save(out, 2);
 	    file->close();
+        cachedOperations.clear();
       elapsedTime = instance->removeSnapshotDirTimer.elapsed();
       instance->outputToConsoleAndFile("Operation replay saving log changes and closing file: ", elapsedTime);
     }

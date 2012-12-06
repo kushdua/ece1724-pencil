@@ -257,6 +257,8 @@ private:
 	QList<int> closestCurves;
 	QList<VertexRef> closestVertices;
 	QPointF offset;
+    QList<QDomElement> cachedOperations;
+    static const int CACHED_OPS_SIZE=1;
 	
 	VectorSelection vectorSelection;
 	//bool selectionChanged;
