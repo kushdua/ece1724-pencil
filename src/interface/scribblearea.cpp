@@ -26,6 +26,8 @@ GNU General Public License for more details.
 #include "bitmapimage.h"
 #include "logger.h"
 
+#include <unistd.h>
+
 void VectorSelection::clear() {
 	vertex.clear();
 	curve.clear();
@@ -726,6 +728,8 @@ qDebug() << "mousePressEvent left button with toolMode " << toolMode << "\n";
 		newOperation.setAttribute("opPosition", "STARTING");
 		newOperation.setAttribute("layerType", layer->type);
 		newOperation.setAttribute("toolMode", toolMode);
+        newOperation.setAttribute("currentLayer", QString("%1").arg(editor->currentLayer));
+        newOperation.setAttribute("currentFrame", QString("%1").arg(editor->currentFrame));
 
 		if(toolMode == COLOURING) {
 			if(layer->type == Layer::BITMAP) {
@@ -1755,7 +1759,7 @@ void ScribbleArea::restoreSnapshot(QString operationSnapshotFile)
 	QDomElement docElem = doc.documentElement();
     //QDomElement docElem = doc.firstChildElement("operations");
 	//if(docElem.isNull()) return;
- 
+        int frameNum = 0;
 		QDomNode tag = docElem.firstChild();
         //QDomElement tag = docElem.firstChildElement("operation");
         qDebug() << "Entering the while loop for tag " << ((tag.isNull())?"NULL":tag.nodeName()) << " while docElem has contents " << docElem.text();
@@ -1766,6 +1770,19 @@ void ScribbleArea::restoreSnapshot(QString operationSnapshotFile)
 			QDomElement element = tag.toElement(); // try to convert the node to an element.
 			if(!element.isNull()) {
                 qDebug() << "Element tag name is " << element.tagName();
+                if(element.tagName()=="operation" && element.attribute("opPosition")=="STARTING") {
+                    bool ok=true;
+                    editor->setCurrentLayer(element.attribute("currentLayer").toInt(&ok,10));
+                    frameNum = element.attribute("currentFrame").toInt(&ok,10);
+                }
+
+                if(element.tagName()=="operation" && element.attribute("opPosition")=="STARTING") {
+                    bool ok=true;
+                    editor->setCurrentLayer(element.attribute("currentLayer").toInt(&ok,10));
+                    frameNum = element.attribute("currentFrame").toInt(&ok,10);
+                    setModified(editor->currentLayer, frameNum);
+                }
+
 				if(element.tagName() == "operation" && element.attribute("opPosition")=="DRAWING") {
 					//loadDomElement(element, snapshotFile);
                     //following code to grap all the attributes and assign it the the variable in order 
@@ -1800,6 +1817,8 @@ void ScribbleArea::restoreSnapshot(QString operationSnapshotFile)
                     endPixel.setX(endpxx.toInt(&ok,10));
                     QString endpxy = element.attribute("endPixelY");
                     endPixel.setY(endpxy.toInt(&ok,10));
+
+		            mousePath.append(endPoint);
 
                     //testing for pencil at the moment
 //	                Layer* layer = editor->getCurrentLayer();
@@ -1883,6 +1902,8 @@ qDebug()<<"Processed eraser operation";
 
 			                update(myTempView.mapRect(QRect(lastPoint.toPoint(), endPoint.toPoint()).normalized().adjusted(-rad, -rad, +rad, +rad)));
                         }
+                        //update();
+                        //paintBitmapBuffer();
                     }
 //                    else if(layer->type == Layer::VECTOR)
                     else if(layerType.toInt(&ok,10) == Layer::VECTOR)
@@ -1898,6 +1919,8 @@ qDebug()<<"Processed eraser operation";
                         endPoint.setX(endptx.toInt(&ok,10));
                         QString endpty = element.attribute("endPointY");
                         endPoint.setY(endpty.toInt(&ok,10));
+
+		                mousePath.append(endPoint);
 //                        qDebug() << "New layer type is " << layer->type << " INSIDE VECTOR";
                         if(toolmode.toInt(&ok, 10) == ScribbleArea::PENCIL)
                         {
@@ -1987,11 +2010,15 @@ qDebug()<<"Processed eraser operation";
 			                update(QRect(lastPixel.toPoint(), endPixel.toPoint()).normalized().adjusted(-rad, -rad, +rad, +rad));
                         }
                     }
+                    //update();
+                    //editor->updateFrameAndVector(frameNum);
+qDebug() << "Set layer " << editor->currentLayer << " and frame " << frameNum << " to modified";
 				}
 			}
 
 			tag = tag.nextSibling();
             //tag = tag.nextSiblingElement();
+            //usleep(500000); //0.5s
 	} 
     qDebug() << "while loop exited";
   file->close();
@@ -2000,8 +2027,6 @@ qDebug()<<"Processed eraser operation";
 
 void ScribbleArea::drawLineTo(const QPointF &endPixel, const QPointF &endPoint, bool saveOperation)
 {
-	qDebug() << "Drawing a line";
-
     Timing *instance = Timing::getInstance();
     instance->removeSnapshotDirTimer.start();
 	bool createdNew = false;
@@ -2009,48 +2034,60 @@ void ScribbleArea::drawLineTo(const QPointF &endPixel, const QPointF &endPoint, 
 	Layer* layer = editor->getCurrentLayer();
 	if (layer == NULL) return;
 
-        QDomDocument doc;
-	QString snapshotDir = editor->getSnapshotDir(); 
-	QFile* file = new QFile(QString(snapshotDir + ((snapshotDir.endsWith("/")) ? "":"/") + "snapshotOperations%1.log").arg(editor->getSnapshotCount()-1));
+    QDomDocument doc;
+    QFile* file = NULL;
+    QDomDocumentType type;
+    QDomNode root;
+    QDomElement newOperation;
 
-	if (!file->exists())
-	{
-		doc = QDomDocument("PencilOperationsSaveLog");
-		createdNew = true;
-	}
+	QString snapshotDir = editor->getSnapshotDir(); 
 
     if(saveOperation || cachedOperations.size()==CACHED_OPS_SIZE-1)
     {
+    	file = new QFile(QString(snapshotDir + ((snapshotDir.endsWith("/")) ? "":"/") + "snapshotOperations%1.log").arg(editor->getSnapshotCount()-1));
+
+	    if (!file->exists())
+	    {
+		    doc = QDomDocument("PencilOperationsSaveLog");
+		    createdNew = true;
+	    }
+
         //try to open file and check for opening errors
 	    if (!file->open(QFile::ReadWrite | QFile::Text)) {
 		    //QMessageBox::warning(this, "Warning", "Cannot write file");
 		    qDebug() << "Warning: Cannot write operations log file";
 		    return;
 	    }
+
+	    if (!createdNew && !doc.setContent(file))
+	    {
+		    qDebug() << "operations log file is not XML file";
+		    return; // this is not a XML file
+	    }
+	    type = doc.doctype();
+	    if (type.name() != "PencilOperationsSaveLog") {
+		    qDebug() << "Warning: This is not a Pencil Snapshot save log document";
+		    return;
+	    }
+
+	    // Add new snapshot and operations log info to main log file
+	    root = doc.documentElement();
+	    if(root.isNull())
+	    {
+		    root = doc.createElement("operations");
+		    doc.appendChild(root);
+	    }
+
+	    newOperation = doc.createElement("operation");
+    }
+    else
+    {
+        newOperation = QDomElement();
+        newOperation.setTagName("operation");
     }
 
-	QTextStream out(file);
+    QTextStream out(file);
 
-	if (!createdNew && !doc.setContent(file))
-	{
-		qDebug() << "operations log file is not XML file";
-		return; // this is not a XML file
-	}
-	QDomDocumentType type = doc.doctype();
-	if (type.name() != "PencilOperationsSaveLog") {
-		qDebug() << "Warning: This is not a Pencil Snapshot save log document";
-		return;
-	}
-
-	// Add new snapshot and operations log info to main log file
-	QDomNode root = doc.documentElement();
-	if(root.isNull())
-	{
-		root = doc.createElement("operations");
-		doc.appendChild(root);
-	}
-
-	QDomElement newOperation = doc.createElement("operation");
     int elapsedTime = instance->removeSnapshotDirTimer.elapsed();
     instance->outputToConsoleAndFile("Operation replay opening file and getting/creating root elem time: ", elapsedTime);
 

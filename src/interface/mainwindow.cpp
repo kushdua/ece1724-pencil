@@ -78,6 +78,8 @@ MainWindow::MainWindow() {
         //window->show();
     }
 
+    editor->restoreSnapshotOnStartup("snapshots/snap1", "snapshots/snapshotOperations1.log");
+
 }
 
 void MainWindow::on_pushButton_clicked()

@@ -29,6 +29,7 @@ GNU General Public License for more details.
 #include "layercamera.h"
 
 #include "Timing.h"
+#include <unistd.h>
 
 Editor::Editor(QMainWindow* parent)
 {
@@ -206,18 +207,6 @@ Editor::Editor(QMainWindow* parent)
 	
 	setAcceptDrops(true);
 
-  //Restore first operations log file by default for now... if it exists! :o
-    Timing *instance = Timing::getInstance();
-    instance->removeSnapshotDirTimer.start();
-
-  QFile snapZero("snapshots/snap1");
-  if(snapZero.exists())
-  {
-    openDocument("snapshots/snap1");
-    scribbleArea->restoreSnapshot("snapshots/snapshotOperations1.log");
-  }
-    int elapsedTime = instance->removeSnapshotDirTimer.elapsed();
-    instance->outputToConsoleAndFile("Restore Snapshot and Operations time: ", elapsedTime);
 }
 
 Editor::~Editor() {
@@ -227,6 +216,26 @@ Editor::~Editor() {
 	clearBackup();
     qDebug() << "Pencil exiting..." << "\n";
     removeSnapshots();
+}
+
+void Editor::restoreSnapshotOnStartup(QString snapshot, QString operations)
+{
+
+  //Restore first operations log file by default for now... if it exists! :o
+    Timing *instance = Timing::getInstance();
+    instance->removeSnapshotDirTimer.start();
+
+  QFile snapZero(snapshot);
+  if(snapZero.exists())
+  {
+    //openDocument("snapshots/snap1");
+//            usleep(500000); //0.5s
+    //newObject();
+    openObject(snapshot);
+    scribbleArea->restoreSnapshot(operations);
+  }
+    int elapsedTime = instance->removeSnapshotDirTimer.elapsed();
+    instance->outputToConsoleAndFile("Restore Snapshot and Operations time: ", elapsedTime);
 }
 
 void Editor::dragEnterEvent(QDragEnterEvent *event)
@@ -293,7 +302,6 @@ void Editor::openDocument(QString fileName)
 	if (!fileName.isEmpty() || maybeSave()) {
 		QSettings settings("Pencil","Pencil");
 		bool deleteSnapshots = fileName.isEmpty();
-qDebug() << "About to open the snapshot file";
 		if(fileName.isEmpty())
 		{
 		  QString myPath = settings.value("lastFilePath", QVariant(QDir::homePath())).toString();
@@ -1100,6 +1108,7 @@ void Editor::updateObject() {
 }
 
 bool Editor::openObject(QString filePath) {
+qDebug() <<"at open object start";
 	// ---- test before opening ----
 	QFileInfo fileInfo(filePath);
 	if( fileInfo.isDir() ) return false;

@@ -76,6 +76,8 @@ class Editor : public QWidget
 public:
 	Editor(QMainWindow* parent);
 	virtual ~Editor();
+
+    void restoreSnapshotOnStartup(QString snapshot, QString operations);
 	
 	//Object* getObject() { return object; }
 	//bool somethingSelected();
