@@ -21,6 +21,9 @@ GNU General Public License for more details.
 #include <QGridLayout>
 #include <QPushButton>
 #include <QComboBox>
+#include <stdio.h>
+#include <QStringList>
+#include <QDir>
 
 MainWindow::MainWindow() {
 
@@ -77,9 +80,22 @@ MainWindow::MainWindow() {
         //currently commented out, so that QT window doesnt show up -- will deal with this later
         //window->show();
     }
-
-    editor->restoreSnapshotOnStartup("snapshots/snap1", "snapshots/snapshotOperations1.log");
-
+    
+    QDir myDir("snapshots");
+    QStringList list = myDir.entryList (QStringList("snapshotOperations*.log"));	// filter only c++ files
+    list.sort();
+    int high=0, current=0;
+    for(int i=0; i<list.size(); i++)
+    {
+      sscanf(list.at(i).toUtf8().constData(),"snapshotOperations%d.log", &current);
+      high = (current > high) ? current : high;
+    }
+    
+    if(high>0)
+    {
+      qDebug() << "Highest snapshot number found was " << high;
+      editor->restoreSnapshotOnStartup(QString("snapshots/snap%1").arg(high), QString("snapshots/snapshotOperations%1.log").arg(high));
+    }
 }
 
 void MainWindow::on_pushButton_clicked()
